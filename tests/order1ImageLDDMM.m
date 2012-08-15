@@ -41,8 +41,8 @@ clear visoptions
 visoptions.dim = 2;
 
 % data
-DD = load('data/images1.mat');
-addpath('../utils/histdist/code/');
+DD = load('tests/data/images1.mat');
+addpath('thirdparty/histdist/code/');
 
 match = [];
 IM = DD.I;
