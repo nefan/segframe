@@ -1,0 +1,49 @@
+segframe, Copyright (C) 2009-2012, Stefan Sommer (sommer@diku.dk)
+https://github.com/nefan/segframe.git
+
+--------------------------------------------------------------------------------
+
+    This file is part of segframe.
+
+    segframe is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    segframe is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with segframe.  If not, see <http://www.gnu.org/licenses/>.
+ 
+--------------------------------------------------------------------------------
+
+Installation intructions:
+
+Dependencies:
+
+minFunc:
+The optimization steps uses the minFunc optimizer, see http://www.di.ens.fr/~mschmidt/Software/minFunc.html. 
+Please download the minFunc_2012.zip archive, unzip it to the 'thirdparty' directory, i.e. 'thirdparty/minFunc_2012', and compile (e.g., run
+'matlab -nodesktop -nosplash -r "mexAll; exit;"')
+
+HistDist and LOI:
+The image similarity and interpolation parts is performed by the HistDist code
+by Sune Darkner (darkner@diku.dk). Please contact Sune for a copy and place the files in 'thirdparty'.
+
+sla:
+Clone it from 'https://github.com/nefan/sla' into the 'thirdparty' directory.
+
+OMP:
+The native workers for LDDMM are parallellized using OMP. The package is tested
+using libgomp, i.e. 'apt-get install libgomp1' on Ubuntu.
+
+Documentation:
+The documentation can be generated using the m2html
+(http://www.artefact.tk/software/matlab/m2html/) package. You may also want the graphviz package ('apt-get install graphviz' on Ubuntu).
+
+Installation:
+Edit the file common.mk to contain the correct paths to the dependency libraries. Then run 'make'.
+Documentation is generated using the m2html by running 'make doc'.
