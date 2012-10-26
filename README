@@ -47,5 +47,11 @@ Framework code in the directory 'registration'.
 Examples and tests in the directory 'tests'.
 Utility functions in the directory 'utils'.
 
+Running:
+After installation (see INSTALL file), start MATLAB from the repository root
+directory. MATLAB should automatically run 'startup.m' and add the necessary
+paths. Then try out the example scripts in the 'tests' directory, e.g. run
+>> pointLDDMM
+
 News:
 May 2012: v0.1 release.
