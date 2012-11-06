@@ -40,6 +40,7 @@ $(startup):
 	echo "addpath(genpath('lddmm'))" >> startup.m
 	echo "addpath(genpath('utils'))" >> startup.m
 	echo "addpath(genpath('tests'))" >> startup.m
+	echo "addpath(genpath('thirdparty'))" >> startup.m
 	echo "addpath(genpath('$(MINFUNC)'))" >> startup.m
 
 doc:
