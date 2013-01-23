@@ -154,7 +154,7 @@ end
             else
                 assert(dim == 3);
                 [valS d2 d1 d3] = PNorm(fixedTransform([evalPoints(2,:); evalPoints(1,:); evalPoints(3,:)])',...
-                    samplesl(1,:)',IF,[0 0 0],[1 1 1],samplesl(1+dim+1,:),1);                
+                    samplesl(1,:)',IF,[0 0 0],[1 1 1],Nsamples*samplesl(1+dim+1,:),1);                
                 ds = [d1'; d2'; d3'];
             end
 
