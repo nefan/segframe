@@ -27,12 +27,12 @@ dim = lddmmoptions.dim;
 cdim = lddmmoptions.cdim; % computations performed in cdim
 L = lddmmoptions.L;
 R = lddmmoptions.R;
-CSP = lddmmoptions.CSP;
-cCSP = lddmmoptions.cCSP;
 
 assert(dim == 2 && cdim == 3); % shift from 2d to 3d
-rhoj2d = reshape(rhoj2d,dim^2,L);
-rhoj3d = zeros(cdim^2,L);
-rhoj3d(1:cdim:cdim*dim,:) = rhoj2d(1:dim:dim^2,:);
-rhoj3d(2:cdim:cdim*dim,:) = rhoj2d(2:dim:dim^2,:);
-rhoj3d = reshape(rhoj3d,cdim^2*L,1);
+rhoj2d = reshape(rhoj2d,R*dim^2,L);
+rhoj3d = zeros(R*cdim^2,L);
+for s=1:R
+    rhoj3d(cdim^2*(s-1)+(1:cdim:cdim*dim),:) = rhoj2d(dim^2*(s-1)+(1:dim:dim^2),:);
+    rhoj3d(cdim^2*(s-1)+(2:cdim:cdim*dim),:) = rhoj2d(dim^2*(s-1)+(2:dim:dim^2),:);
+end
+rhoj3d = reshape(rhoj3d,R*cdim^2*L,1);

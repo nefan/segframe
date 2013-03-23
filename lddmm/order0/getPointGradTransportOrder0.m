@@ -25,7 +25,6 @@ cdim = lddmmoptions.cdim; % computations performed in cdim
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 CSP = lddmmoptions.CSP;
-cCSP = lddmmoptions.cCSP;
 scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 energyweight = lddmmoptions.energyweight;

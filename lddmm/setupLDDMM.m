@@ -28,6 +28,8 @@ end
 % dim
 assert(lddmmoptions.dim == 2 || lddmmoptions.dim == 3);
 lddmmoptions.cdim = 3; % all computations done in dim 3
+dim = lddmmoptions.dim;
+cdim = lddmmoptions.cdim;
 
 % scales
 assert(isfield(lddmmoptions,'scale') || isfield(lddmmoptions,'scales'));
@@ -46,20 +48,52 @@ if ~isfield(lddmmoptions,'order')
     lddmmoptions.order = 0;
 end
 assert(lddmmoptions.order >= 0 || lddmmoptions.order <= 1);
-assert(lddmmoptions.order ==0 || lddmmoptions.R == 1); % scale currently only supported for order 0
 if lddmmoptions.order == 0
-    lddmmoptions.dimX1 = (1+lddmmoptions.R)*lddmmoptions.dim; % x dimension
+    lddmmoptions.dimX1 = (1+lddmmoptions.R)*dim; % x dimension
 else
-    lddmmoptions.dimX1 = (1+lddmmoptions.dim)*lddmmoptions.dim;
+    lddmmoptions.dimX1 = (1+dim*lddmmoptions.R)*dim;
 end
 
 % data structures
 if lddmmoptions.order == 0
-    lddmmoptions.CSP = lddmmoptions.dim*(1+lddmmoptions.R); % column size particles
-    lddmmoptions.cCSP = lddmmoptions.cdim*(1+lddmmoptions.R); % for computations
+    lddmmoptions.CSP = dim*(1+lddmmoptions.R); % column size particles
+    lddmmoptions.cCSP = cdim*(1+lddmmoptions.R); % for computations
+    lddmmoptions.iCSP = lddmmoptions.R*dim; % input
+    
+    % indexing
+    lddmmoptions.Iphi = @() 1:cdim;
+    lddmmoptions.Irho = @(s) cdim*s+1:cdim;
+    
 else
-    lddmmoptions.CSP = lddmmoptions.dim*(1+1+lddmmoptions.dim); % forward column size particles
-    lddmmoptions.cCSP = lddmmoptions.cdim*(1+1+lddmmoptions.cdim); % for computations
+    lddmmoptions.CSP = dim+lddmmoptions.R*(dim+dim^2); % obsolete
+    lddmmoptions.iCSP = lddmmoptions.R*(dim+dim^2); % input
+    lddmmoptions.fCSP = cdim+cdim^2+lddmmoptions.R*cdim; % forward
+    lddmmoptions.bCSP = cdim+cdim^2+lddmmoptions.R*(cdim+cdim^2); % backwards
+    
+    % indexing
+    phioffset = 0;
+    Dphioffset = phioffset+cdim;
+    muoffset = Dphioffset+cdim*cdim;
+    mujoffset = muoffset+cdim;
+    iscaleoffset = dim+dim^2;
+    fscaleoffset = cdim;
+    bscaleoffset = cdim+cdim^2;
+
+    % input
+    lddmmoptions.iImu = @(s) (s-1)*iscaleoffset+(1:dim);    
+    lddmmoptions.iImuj = @(s) dim+(s-1)*iscaleoffset+(1:dim^2);    
+    
+    % forward
+    lddmmoptions.fIphi = @() phioffset+(1:cdim);
+    lddmmoptions.fIDphi = @() Dphioffset+(1:cdim^2);
+    lddmmoptions.fIDphic = @(c) Dphioffset+cdim*(c-1)+(1:cdim);
+    lddmmoptions.fImu = @(s) muoffset+(s-1)*fscaleoffset+(1:cdim);
+
+    % derivatives
+    lddmmoptions.bIphi = @() phioffset+(1:cdim);
+    lddmmoptions.bIDphi = @() Dphioffset+(1:cdim^2);
+    lddmmoptions.bImu = @(s) muoffset+(s-1)*bscaleoffset+(1:cdim);    
+    lddmmoptions.bImu = @(s) mujoffset+(s-1)*bscaleoffset+(1:cdim^2);
 end
 
 % tolerances

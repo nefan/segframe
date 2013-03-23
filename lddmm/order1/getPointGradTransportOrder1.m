@@ -25,7 +25,7 @@ cdim = lddmmoptions.cdim;
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 CSP = lddmmoptions.CSP;
-cCSP = lddmmoptions.cCSP;
+cCSP = lddmmoptions.fCSP;
 scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 energyweight = lddmmoptions.energyweight;
@@ -38,7 +38,15 @@ mujoffset = muoffset+cdim;
 gradCSP = 2*dim+2*dim^2;
 cgradCSP = 2*cdim+2*cdim^2;
 
-ks = dkernelsGaussian(dim);
+% indexing functions
+iImu = lddmmoptions.iImu;
+iImuj = lddmmoptions.iImuj;
+fIphi = lddmmoptions.fIphi;
+fIDphi = lddmmoptions.fIDphi;
+fIDphic = lddmmoptions.fIDphic;
+fImu = lddmmoptions.fImu;
+
+ks = dkernelsGaussian(cdim);
 
     function v0 = lgradTransport(v1, x, Gt)
         
@@ -51,43 +59,74 @@ ks = dkernelsGaussian(dim);
         end
         M = dkernelDerivativeMatrix(rho0,rhoj0,lddmmoptions);
 
-%         function v = Egrad()    
-%             v = zeros(cdim*(1+cdim),L);
-%             G0 = reshape(deval(Gt,0),cdim*(1+cdim+1),L);
-%             for n = 1:L
-%                 xn = G0(1:cdim,n);
-%                 an = G0(cdim*(1+cdim)+(1:cdim),n); 
-% 
-%                 for ll = 1:L % particle
-%                     xl = G0(1:cdim,ll);
-%                     al = G0(cdim*(1+cdim)+(1:cdim),ll);  
-%                     Ks = ks.Ks(xl,xn,scales(s),scaleweight(s));
-%                     N1 = ks.N1Ks(xl,xn,scales(s),scaleweight(s));
-%                     D2N1 = ks.D2N1Ks(xl,xn,scales(s),scaleweight(s));
-% 
-%                     % an
-%                     v(1:cdim,n) = v(1:cdim,n) + 2*Ks*al;
-% 
-%                     for j = 1:cdim
-%                         alj = rhoj0(cdim*(j-1)+(1:cdim),ll);             
-%                         % an
-%                         v(1:cdim,n) = v(1:cdim,n) + 2*N1(j)*alj;
-% 
-%                         % anj
-%                         v(cdim+cdim*(j-1)+(1:cdim),n) = v(cdim+cdim*(j-1)+(1:cdim),n) - 2*N1(j)*an;
-% 
-%                         for jm = 1:cdim
-%                             aljm = rhoj0(cdim*(j-1)+(1:cdim),ll);             
-% 
-%                             % anj
-%                             v(cdim+cdim*(j-1)+(1:cdim),n) = v(cdim+cdim*(j-1)+(1:cdim),n) + 2*D2N1(jm,j)*aljm;
-%                         end
-%                     end            
-%                 end
-%             end
-% 
-%             v = reshape(v,cdim*(1+cdim)*L,1);
-%         end
+        function v = Egradt(Gtt)    
+            v = zeros(cgradCSP,L);
+            
+            assert(R == 1);
+            s = 1;
+            for n = 1:L
+                xn = Gtt(fIphi(),n);
+                Dphin = reshape(Gtt(fIDphi(),n),cdim,cdim);
+                mun = Gtt(fImu(s),n);
+                an = mun;                
+
+                for ll = 1:L % particle
+                    xl = Gtt(1:cdim,ll);
+                    Dphil = reshape(Gtt(fIDphi(),ll),cdim,cdim);
+                    mul = Gtt(fImu(s),ll);
+                    al = mul;                    
+                    Ks = ks.Ks(xl,xn,scales(s),scaleweight(s));
+                    N1 = ks.N1Ks(xl,xn,scales(s),scaleweight(s));
+                    D2N1 = ks.D2N1Ks(xl,xn,scales(s),scaleweight(s));
+                    
+                    % phi
+                    v(bIphi(),n) = v(bIphi(),n) + an'*al*2*N1;
+                    
+                    % Dphi
+
+                    % mu
+                    v(1:cdim,n) = v(1:cdim,n) + 2*Ks*al;
+
+                    for j = 1:cdim
+                        alj = zeros(cdim,1);
+                        for k=1:cdim
+                            mulk = Dphil'\rhoj0(cdim*(k-1)+(1:cdim),ll);
+                            alj = alj+Dphil(j,k)*mulk;
+                        end
+                        
+                        
+                        % phi
+
+                        % Dphi
+
+                        
+                        % mu
+                        v(1:cdim,n) = v(1:cdim,n) + 2*N1(j)*alj;
+
+                        % munj
+                        v(cdim+cdim*(j-1)+(1:cdim),n) = v(cdim+cdim*(j-1)+(1:cdim),n) - 2*N1(j)*an;
+
+                        for jm = 1:cdim
+                            aljm = zeros(cdim,1);
+                            for k=1:cdim
+                                mulk = Dphin'\rhoj0(cdim*(k-1)+(1:cdim),ll);
+                                aljm = aljm+Dphin(jm,k)*mulk;
+                            end                            
+
+                            % phi
+
+                            % Dphi
+                            
+                            
+                            % munj
+                            v(cdim+cdim*(j-1)+(1:cdim),n) = v(cdim+cdim*(j-1)+(1:cdim),n) + 2*D2N1(jm,j)*aljm;
+                        end
+                    end            
+                end
+            end
+
+            v = reshape(v,cdim*(1+cdim)*L,1);
+        end
         
         function dy = Gc(t,ytt) % wrapper for cpu version of G
             Gtt = deval(Gt,1-t);
@@ -101,86 +140,14 @@ ks = dkernelsGaussian(dim);
 %                 norm(dy-dy2)
                 assert(norm(dy-dy2) < epsilon);
             end
-        end   
-        
-        function dy = Gtest(t,ytt)
-            ytt = reshape(ytt,cgradCSP,L);
-
-            dy = zeros(size(ytt));
-
-            Gtt = reshape(deval(Gt,1-t),dim*(1+dim+1),L);
-            if dim ~= cdim
-                Gtt = reshape(Gt2dTo3dOrder1(Gtt,lddmmoptions),cCSP,L);
-            end 
-
-            for n = 1:L % update all particles
-                for i = 1:L % multiply
-%                     dy(phioffset+(1:cdim),n) = dy(phioffset+(1:cdim),n) ...
-%                         + M.aphiphi(i,n,Gtt)'*ytt(phioffset+(1:cdim),i) ...
-%                         + M.amuphi(i,n,Gtt)'*ytt(muoffset+(1:cdim),i);
-%                     for ll = 1:cdim
-%                         dy(phioffset+(1:cdim),n) = dy(phioffset+(1:cdim),n) ...
-%                             + M.aDphiphi(i,n,ll,Gtt)'*ytt(Dphioffset+cdim*(ll-1)+(1:cdim),i);
-%                     end            
-%                     for jj = 1:cdim
-%                         dy(phioffset+(1:cdim),n) = dy(phioffset+(1:cdim),n) ...
-%                             + M.amujphi(i,n,jj,Gtt)'*ytt(mujoffset+cdim*(jj-1)+(1:cdim),i);                
-%                     end
-
-%                     for kk = 1:cdim
-%                         dy(Dphioffset+cdim*(kk-1)+(1:cdim),n) = dy(Dphioffset+cdim*(kk-1)+(1:cdim),n) ...
-%                             + M.aphiDphi(i,n,kk,Gtt)'*ytt(phioffset+(1:cdim),i) ...
-%                             + M.amuDphi(i,n,kk,Gtt)'*ytt(muoffset+(1:cdim),i);
-%                         for ll = 1:cdim
-%                             dy(Dphioffset+cdim*(kk-1)+(1:cdim),n) = dy(Dphioffset+cdim*(kk-1)+(1:cdim),n) ...
-%                                 + M.aDphiDphi(i,n,ll,kk,Gtt)'*ytt(Dphioffset+cdim*(ll-1)+(1:cdim),i);
-%                         end            
-%                         for jj = 1:cdim
-%                             dy(Dphioffset+cdim*(kk-1)+(1:cdim),n) = dy(Dphioffset+cdim*(kk-1)+(1:cdim),n) ...
-%                                 + M.amujDphi(i,n,jj,kk,Gtt)'*ytt(mujoffset+cdim*(jj-1)+(1:cdim),i);                
-%                         end           
-%                     end
-
-%                     dy(muoffset+(1:cdim),n) = dy(muoffset+(1:cdim),n) ...
-%                         + M.aphimu(i,n,Gtt)'*ytt(phioffset+(1:cdim),i) ...
-%                         + M.amumu(i,n,Gtt)'*ytt(muoffset+(1:cdim),i);
-%                     for ll = 1:cdim
-%                         dy(muoffset+(1:cdim),n) = dy(muoffset+(1:cdim),n) ...
-%                             + M.aDphimu(i,n,ll,Gtt)'*ytt(Dphioffset+cdim*(ll-1)+(1:cdim),i);
-%                     end            
-%                     for jj = 1:cdim
-%                         dy(muoffset+(1:cdim),n) = dy(muoffset+(1:cdim),n) ...
-%                             + M.amujmu(i,n,jj,Gtt)'*ytt(mujoffset+cdim*(jj-1)+(1:cdim),i);                
-%                     end
-
-%                     for jjm = 1:cdim
-%                         dy(mujoffset+cdim*(jjm-1)+(1:cdim),n) = dy(mujoffset+cdim*(jjm-1)+(1:cdim),n) ...
-%                             + M.aphimuj(i,n,jjm,Gtt)'*ytt(phioffset+(1:cdim),i) ...
-%                             + M.amumuj(i,n,jjm,Gtt)'*ytt(muoffset+(1:cdim),i);
-%                         for ll = 1:cdim
-%                             dy(mujoffset+cdim*(jjm-1)+(1:cdim),n) = dy(mujoffset+cdim*(jjm-1)+(1:cdim),n) ...
-%                                 + M.aDphimuj(i,n,ll,jjm,Gtt)'*ytt(Dphioffset+cdim*(ll-1)+(1:cdim),i);
-%                         end            
-%                         for jj = 1:cdim
-%                             dy(mujoffset+cdim*(jjm-1)+(1:cdim),n) = dy(mujoffset+cdim*(jjm-1)+(1:cdim),n) ...
-%                                 + M.amujmuj(i,n,jj,jjm,Gtt)'*ytt(mujoffset+cdim*(jj-1)+(1:cdim),i);                
-%                         end           
-%                     end            
-                end
-            end
-
-            dy = reshape(dy,cgradCSP*L,1);
-        end        
+        end          
 
         function dy = G(t,ytt)
             ytt = reshape(ytt,cgradCSP,L);
 
             dy = zeros(size(ytt));
 
-            Gtt = reshape(deval(Gt,1-t),dim*(1+dim+1),L);
-            if dim ~= cdim
-                Gtt = reshape(Gt2dTo3dOrder1(Gtt,lddmmoptions),cCSP,L);
-            end 
+            Gtt = reshape(deval(Gt,1-t),cdim*(1+cdim+1),L);
 
             for n = 1:L % update all particles
                 for i = 1:L % multiply
@@ -238,6 +205,7 @@ ks = dkernelsGaussian(dim);
                 end
             end
 
+            dy = dy + energyweight(1)*Egradt(Gtt)';
             dy = reshape(dy,cgradCSP*L,1);
         end
 
@@ -547,8 +515,8 @@ ks = dkernelsGaussian(dim);
             v1 = reshape(v1,CSP*L,1);
             % rest is zero
         end
-        wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
-%         wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
+%         wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
+        wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
         assert(wt.x(end) == 1);
         w0 = reshape(deval(wt,1),cgradCSP,L);
         if dim == cdim

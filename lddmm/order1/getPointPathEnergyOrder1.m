@@ -25,9 +25,19 @@ cdim = lddmmoptions.cdim;
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 CSP = lddmmoptions.CSP;
-cCSP = lddmmoptions.cCSP;
+cCSP = lddmmoptions.fCSP;
+iCSP = lddmmoptions.iCSP;
+fCSP = lddmmoptions.fCSP;
 scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
+
+% indexing functions
+iImu = lddmmoptions.iImu;
+iImuj = lddmmoptions.iImuj;
+fIphi = lddmmoptions.fIphi;
+fIDphi = lddmmoptions.fIDphi;
+fIDphic = lddmmoptions.fIDphic;
+fImu = lddmmoptions.fImu;
 
 ks = dkernelsGaussian(cdim);
 
@@ -44,13 +54,15 @@ ks = dkernelsGaussian(cdim);
     end
 
 
-    function [E v0] = lpathEnergy(x,Gtt)
-        
-        x = reshape(x,(1+dim)*dim,L);
-        rhoj0 = x(dim+(1:dim^2),:);
+    function [E,v0] = lpathEnergy(x,Gtt)
+        x = reshape(x,iCSP,L);
+        rhoj0 = zeros(R*dim^2,L);
+        for s=1:R
+            rhoj0(dim^2*(s-1)+(1:dim^2),:) = x(iImuj(s),:);
+        end
         if dim ~= cdim
-            rhoj0 = reshape(rhoj2dTo3dOrder1(rhoj0,lddmmoptions),cdim^2,L);
-        end      
+            rhoj0 = reshape(rhoj2dTo3dOrder1(rhoj0,lddmmoptions),R*cdim^2,L);
+        end
         
         
         function v = gradE()    
@@ -100,15 +112,15 @@ ks = dkernelsGaussian(cdim);
 
             for s = 1:R
                 for i = 1:L
-                    xi = Gt(1:cdim,i);
-                    Dphii = reshape(Gt(cdim+(1:cdim*cdim),i),cdim,cdim);
-                    mui = Gt(cdim+cdim^2+(1:cdim),i);
+                    xi = Gt(fIphi(),i);
+                    Dphii = reshape(Gt(fIDphi(),i),cdim,cdim);
+                    mui = Gt(fImu(s),i);
                     ai = mui;
 
                     for l = 1:L
-                        xl = Gt(1:cdim,l);
-                        Dphil = reshape(Gt(cdim+(1:cdim^2),l),cdim,cdim);
-                        mul = Gt(cdim+cdim^2+(1:cdim),l);
+                        xl = Gt(fIphi(),l);
+                        Dphil = reshape(Gt(fIDphi(),l),cdim,cdim);
+                        mul = Gt(fImu(s),l);
                         al = mul;
 
                         Et = Et + ai'*ks.Ks(xl,xi,scales(s),scaleweight(s))*al;
@@ -151,22 +163,24 @@ ks = dkernelsGaussian(cdim);
 
         end
 
-        % Epath = integrate(@Gc,0,1); % fast C version
+%         Epath = integrate(@Gc,0,1); % fast C version
         E = integrate(@G,0,1); % sloow matlab version
         assert(E >= 0);
         
-        % warning: x-parts not included here!
-        w0 = reshape(gradE(),cdim^2+cdim,L);
-        if dim == cdim
-            v0 = [zeros(dim,L); w0];
-        else
-            assert(dim == 2 && cdim == 3); % shift from 3d to 2d
-            v0 = zeros(CSP,L);
-            v0(dim+(1:dim),:) = w0(1:dim,:);
-            v0(2*dim+(1:dim:dim*dim),:) = w0(cdim+(1:cdim:cdim*dim),:);
-            v0(2*dim+(2:dim:dim*dim),:) = w0(cdim+(2:cdim:cdim*dim),:);            
+        if nargout > 1
+            % warning: x-parts not included here!
+            w0 = reshape(gradE(),cdim^2+cdim,L);
+            if dim == cdim
+                v0 = [zeros(dim,L); w0];
+            else
+                assert(dim == 2 && cdim == 3); % shift from 3d to 2d
+                v0 = zeros(CSP,L);
+                v0(dim+(1:dim),:) = w0(1:dim,:);
+                v0(2*dim+(1:dim:dim*dim),:) = w0(cdim+(1:cdim:cdim*dim),:);
+                v0(2*dim+(2:dim:dim*dim),:) = w0(cdim+(2:cdim:cdim*dim),:);            
+            end
+            v0 = reshape(v0,CSP*L,1);
         end
-        v0 = reshape(v0,CSP*L,1);
     end
 
 pathEnergy = @lpathEnergy;

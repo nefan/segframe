@@ -61,12 +61,13 @@ pathEnergy = methods.pathEnergy;
         if order == 0        
             Epath = pathEnergy(x,Gt); 
         else
-            [Epath vE] = pathEnergy(x,Gt); 
+%             [Epath vE] = pathEnergy(x,Gt); 
+            Epath = pathEnergy(x,Gt); 
         end
                 
         % gradient at endpoint
         [U v1] = gradU(reshape(shot,dimY1*L,1));        
-        y = energyweight*[Epath; U];    
+        y = energyweight*[Epath; U];
         if nargout == 1
             return
         end        
@@ -82,7 +83,7 @@ pathEnergy = methods.pathEnergy;
         else
             vU = gradTransport(w1,x,Gt);
             v = energyweight(1)*vE+energyweight(2)*vU;
-        end  
+        end
         
         if isfield(methods,'prior')
             [py pv] = methods.prior(x);

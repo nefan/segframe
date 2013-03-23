@@ -22,7 +22,8 @@
 
 % LDDMM options
 clear lddmmoptions
-lddmmoptions.scale = 1.0; % Gaussian kernels
+% lddmmoptions.scale = 1.0; % Gaussian kernels
+lddmmoptions.scales = [1.0]; % Gaussian kernels
 lddmmoptions.energyweight = [1 12]; % weighting between energy of curve and match
 lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
 lddmmoptions.order = 1;
@@ -35,7 +36,7 @@ visoptions.Ngridpoints = 25;
 visoptions.margin = 1.5;
 visoptions.skip = 4;
 % scale relative to grid:
-scaleInGridUnits = lddmmoptions.scale/(2*visoptions.margin/(visoptions.Ngridpoints-1))
+scaleInGridUnits = lddmmoptions.scales(1)/(2*visoptions.margin/(visoptions.Ngridpoints-1))
 
 options = getDefaultOptions();
 

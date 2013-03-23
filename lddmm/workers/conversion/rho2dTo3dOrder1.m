@@ -27,8 +27,6 @@ dim = lddmmoptions.dim;
 cdim = lddmmoptions.cdim; % computations performed in cdim
 L = lddmmoptions.L;
 R = lddmmoptions.R;
-CSP = lddmmoptions.CSP;
-cCSP = lddmmoptions.cCSP;
 
 assert(dim == 2 && cdim == 3); % shift from 2d to 3d
 rho2d = reshape(rho2d,dim,L);
