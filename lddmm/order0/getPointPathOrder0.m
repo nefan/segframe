@@ -30,12 +30,16 @@ scaleweight = lddmmoptions.scaleweight;
 
 [Ks D1Ks D2Ks] = gaussianKernels();
 
-    function drho = Gc(t,rhot) % wrapper for C version
+    function drho = Gc(tt,rhot) % wrapper for C version
+        t = intTime(tt,false,lddmmoptions);
+        
         drho = fastPointPathOrder0(t,rhot,L,R,cdim,scales.^2,scaleweight.^2);
+        
+        drho = intResult(drho,false,lddmmoptions);
 
         % debug
         if getOption(lddmmoptions,'testC')
-            drho2 = G(t,rhot);
+            drho2 = G(tt,rhot);
             if norm(drho-drho2) > 10e-12
                 1;
             end
@@ -43,8 +47,9 @@ scaleweight = lddmmoptions.scaleweight;
         end
     end
 
-    function drho = G(t,rhot)  % slooow version
+    function drho = G(tt,rhot)  % slooow version
         rhot = reshape(rhot,cCSP,L);
+        t = intTime(tt,false,lddmmoptions);
 
         drho = zeros(size(rhot));
 
@@ -72,6 +77,7 @@ scaleweight = lddmmoptions.scaleweight;
             end
         end
 
+        drho = intResult(drho,false,lddmmoptions);
         drho = reshape(drho,L*cCSP,1);
     end
 

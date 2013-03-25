@@ -89,26 +89,30 @@ ks = dkernelsGaussian(dim);
 %             v = reshape(v,cdim*(1+cdim)*L,1);
 %         end
         
-        function dy = Gc(t,ytt) % wrapper for cpu version of G
-            Gtt = deval(Gt,1-t);
+        function dy = Gc(tt,ytt) % wrapper for cpu version of G
+            t = intTime(tt,true,lddmmoptions);
+            Gtt = deval(Gt,t);
             
             dy = fastPointGradTransportOrder1(ytt,Gtt,reshape(rhoj0,[],1),L,R,cdim,scales.^2,scaleweight.^2,energyweight);
 %             dy = dy + Gtest(t,ytt); % until everything is implemented
 
+            dy = -intResult(dy,true,lddmmoptions); % sign for backwards integration already accounted for
+
             % debug
             if getOption(lddmmoptions,'testC')
-                dy2 = G(t,ytt);  
+                dy2 = G(tt,ytt);  
 %                 norm(dy-dy2)
                 assert(norm(dy-dy2) < epsilon);
             end
         end   
         
-        function dy = Gtest(t,ytt)
+        function dy = Gtest(tt,ytt)
             ytt = reshape(ytt,cgradCSP,L);
+            t = intTime(t,false,lddmmoptions);
 
             dy = zeros(size(ytt));
 
-            Gtt = reshape(deval(Gt,1-t),dim*(1+dim+1),L);
+            Gtt = reshape(deval(Gt,t),dim*(1+dim+1),L);
             if dim ~= cdim
                 Gtt = reshape(Gt2dTo3dOrder1(Gtt,lddmmoptions),cCSP,L);
             end 
@@ -172,15 +176,13 @@ ks = dkernelsGaussian(dim);
             dy = reshape(dy,cgradCSP*L,1);
         end        
 
-        function dy = G(t,ytt)
+        function dy = G(tt,ytt)
             ytt = reshape(ytt,cgradCSP,L);
+            t = intTime(tt,true,lddmmoptions);
 
             dy = zeros(size(ytt));
 
-            Gtt = reshape(deval(Gt,1-t),dim*(1+dim+1),L);
-            if dim ~= cdim
-                Gtt = reshape(Gt2dTo3dOrder1(Gtt,lddmmoptions),cCSP,L);
-            end 
+            Gtt = reshape(deval(Gt,t),cdim*(1+cdim+1),L);
 
             for n = 1:L % update all particles
                 for i = 1:L % multiply
@@ -238,6 +240,7 @@ ks = dkernelsGaussian(dim);
                 end
             end
 
+            dy = -intResult(dy,true,lddmmoptions); % sign for backwards integration already accounted for
             dy = reshape(dy,cgradCSP*L,1);
         end
 

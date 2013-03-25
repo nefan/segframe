@@ -38,20 +38,24 @@ ks = dkernelsGaussian(cdim);
             rhoj0 = reshape(rhoj2dTo3dOrder1(rhoj0,lddmmoptions),cdim^2,L);
         end        
         
-        function dGt = Gc(t,Gt) % wrapper for cpu version of G
+        function dGt = Gc(tt,Gt) % wrapper for cpu version of G
+            t = intTime(tt,false,lddmmoptions);
 
             dGt = fastPointPathOrder1(t,Gt,reshape(rhoj0,[],1),L,R,cdim,scales.^2,scaleweight.^2);
+            
+            dGt = intResult(dGt,false,lddmmoptions);
 
             % debug
             if getOption(lddmmoptions,'testC')
-                dGt2 = G(t,Gt);  
+                dGt2 = G(tt,Gt);  
 %                 norm(dGt-dGt2)
                 assert(norm(dGt-dGt2) < epsilon);
             end
         end           
     
-        function dGt = G(t,Gt)  % slooow version
+        function dGt = G(tt,Gt)  % slooow version
             Gt = reshape(Gt,cCSP,L);
+            t = intTime(tt,false,lddmmoptions);
 
             dGt = zeros(size(Gt));
 
@@ -110,6 +114,7 @@ ks = dkernelsGaussian(cdim);
 
             end
 
+            dGt = intResult(dGt,false,lddmmoptions);            
             dGt = reshape(dGt,L*cCSP,1);
         end
 

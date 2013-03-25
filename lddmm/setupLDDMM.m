@@ -75,9 +75,6 @@ end
 % lddmmoptions.testC = true; % for dim 3
 
 % methods
-if isfield(lddmmoptions,'reverse')
-    assert(~lddmmoptions.reverse); % not implemented
-end
 if getOption(lddmmoptions,'sparsity')
     methods.prior = getSparsePrior(lddmmoptions);
 end
@@ -87,5 +84,6 @@ methods.pointPath = getPointPath(moving,lddmmoptions);
 methods.gradTransport = getPointGradTransport(lddmmoptions);
 methods.transport = getPointLDDMMTransport(getPointPath(moving,lddmmoptions),lddmmoptions);
 methods.pathEnergy = getPointPathEnergy(lddmmoptions);
+methods.getMoving = @() moving;
 
 end

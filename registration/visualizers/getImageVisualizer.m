@@ -29,23 +29,23 @@ if isfield(imageoptions,'fixedTransform')
     fixedTransform = imageoptions.fixedTransform;
 end
 
-    function imageVisualizer(x,varargin)  
+    function stop = imageVisualizer(x,varargin)  
 %         x' % output status
         
         % obtain moving image result
-        [grid1{1} grid1{2} grid1{3}] = meshgrid(1:size(IF,2),1:size(IF,1),0);
+        [gridFixed{1} gridFixed{2} gridFixed{3}] = meshgrid(1:size(IF,2),1:size(IF,1),0);
 
         % transport
-        grid0 = transport(x,grid1,true);
+        gridMoving = transport(x,gridFixed);
 
         % spline
-        vals = Spline2D(movingTransform([reshape(grid0{2},numel(IF),1) reshape(grid0{1},numel(IF),1)]')',...
+        vals = Spline2D(movingTransform([reshape(gridMoving{2},numel(IF),1) reshape(gridMoving{1},numel(IF),1)]')',...
             zeros(numel(IF),1),IM,[0 0],double([1 1]),1);
         IMresult = reshape(vals,size(IF));
-        vals = Spline2D(fixedTransform([reshape(grid1{2},numel(IF),1) reshape(grid1{1},numel(IF),1)]')',...
+        vals = Spline2D(fixedTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]')',...
             zeros(numel(IF),1),IF,[0 0],double([1 1]),1);
         IFspline = reshape(vals,size(IF));
-        vals = Spline2D(movingTransform([reshape(grid1{2},numel(IF),1) reshape(grid1{1},numel(IF),1)]')',...
+        vals = Spline2D(movingTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]')',...
             zeros(numel(IF),1),IM,[0 0],double([1 1]),1);
         IMspline = reshape(vals,size(IF));
         
@@ -62,6 +62,8 @@ end
         fprintf('post-match 1-norm IM/IF: %f\n',norm(IMresult-IFspline,1)/numel(IF));
         fprintf('relative decrase (%%): %f\n',(1-norm(IMresult-IFspline,1)/norm(IMspline-IFspline,1))*100);
         fprintf('change 1-norm: %f\n',norm(IMresult-IMspline,1)/numel(IF));
+        
+        stop = false; % dont stop
     end
 
 visualizer = @imageVisualizer;

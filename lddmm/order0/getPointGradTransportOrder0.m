@@ -33,27 +33,36 @@ epsilon = lddmmoptions.epsilon;
 
     function v0 = lgradTransport(v1, x, rhot)
 
-        function dy = Gc(t,yt) % wrapper for cpu version of G
-            rhott = deval(rhot,1-t);
+        function dy = Gc(tt,ytt) % wrapper for cpu version of G
+            t = intTime(tt,true,lddmmoptions);
+            rhott = deval(rhot,t);
             if dim ~= cdim
-                yt = rho2dTo3dOrder0(yt,lddmmoptions);
+                yt = rho2dTo3dOrder0(ytt,lddmmoptions);
             end    
 
             dy = fastPointGradTransportOrder0(yt,rhott,L,R,cdim,scales.^2,scaleweight.^2,energyweight);
             if dim ~= cdim
                 dy = rho3dTo2dOrder0(dy,lddmmoptions);
             end
+            
+            dy = -intResult(dy,true,lddmmoptions); % sign for backwards integration already accounted for
 
             % debug
             if getOption(lddmmoptions,'testC')
-                dy2 = G(t,yt);  
+                dy2 = G(tt,ytt);  
                 assert(norm(dy-dy2) < epsilon);
             end
         end       
         [Ks D1Ks D2Ks] = gaussianKernels();
         function vt = Egradth(ttt)    
             vt = zeros(CSP*L,1);
-            rhott = reshape(deval(rhot,ttt),CSP,L);
+            
+            rhott = deval(rhot,ttt);
+            if dim ~= cdim
+                rhott = rho3dTo2dOrder0(rhott,lddmmoptions);
+            end
+            rhott = reshape(rhott,CSP,L);
+            
             for i = 1:L % particle
                 xi = rhott(1:dim,i);
 
@@ -73,12 +82,17 @@ epsilon = lddmmoptions.epsilon;
                 end
             end
         end
-        function dy = G(t,ytt)
+        function dy = G(tt,ytt)
             ytt = reshape(ytt,1,CSP*L);
+            t = intTime(tt,true,lddmmoptions);          
 
             dy = zeros(size(ytt));
 
-            rhott = reshape(deval(rhot,1-t),CSP,L);
+            rhott = deval(rhot,t);
+            if dim ~= cdim
+                rhott = rho3dTo2dOrder0(rhott,lddmmoptions);
+            end
+            rhott = reshape(rhott,CSP,L);
 
             for i = 1:L % particle
                 xi = rhott(1:dim,i);
@@ -129,7 +143,9 @@ epsilon = lddmmoptions.epsilon;
                 end
             end
 
-            dy = dy + energyweight(1)*Egradth(1-t)';
+            dy = dy + energyweight(1)*Egradth(t)';
+            dy = -intResult(dy,true,lddmmoptions); % sign for backwards integration already accounted for            
+            
             dy = reshape(dy,CSP*L,1);
         end
 

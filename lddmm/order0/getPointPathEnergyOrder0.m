@@ -31,24 +31,12 @@ scaleweight = lddmmoptions.scaleweight;
 
 [Ks D1Ks D2Ks] = gaussianKernels();
 
-    function val = integrate(f,s,e)
-
-        function r = apply(t)
-            r = zeros(size(t));
-            for k = 1:length(t)
-                r(k) = f(t(k));
-            end
-        end
-
-        val = quad(@apply,s,e);    
-    end
-
     function [E v] = lpathEnergy(x,rhot)
         
-        function vt = gradEt(tt,y)    
-            t = 1-tt;
-            vt = zeros(CSP*L,1);
-            rhott = reshape(deval(rhot,t),CSP,L);
+        function vt = gradEt(tt,y)
+            t = intTime(tt,true,lddmmoptions);            
+            vt = zeros(cCSP*L,1);
+            rhott = reshape(deval(rhot,t),cCSP,L);
             for i = 1:L % particle
                 xi = rhott(1:dim,i);
 
@@ -67,22 +55,30 @@ scaleweight = lddmmoptions.scaleweight;
                     end
                 end
             end
+            
+            vt = -intResult(vt,true,lddmmoptions); % sign for backwards integration already accounted for
         end
         
-        function Et = Gc(t,yt) % wrapper for C version of G
+        function Et = Gc(tt,yt) % wrapper for C version of G
+            t = intTime(tt,false,lddmmoptions);
             rhott = deval(rhot,t);         
 
             Et = fastPointPathEnergyOrder0(rhott,L,R,cdim,scales.^2,scaleweight.^2);
 
             % debug
             if getOption(lddmmoptions,'testC')
-                Et2 = G(t);  
+                Et2 = G(tt);  
                 assert(norm(Et2-Et) < 10e-12);
             end
         end
 
-        function Et = G(t)
-            rhott = reshape(deval(rhot,t),CSP,L);
+        function Et = G(tt)
+            t = intTime(tt,false,lddmmoptions);
+            rhott = deval(rhot,t);
+            if dim ~= cdim
+                rhott = rho3dTo2dOrder0(rhott,lddmmoptions);
+            end
+            rhott = reshape(rhott,CSP,L);
 
             Et = 0;
 

@@ -31,19 +31,6 @@ scaleweight = lddmmoptions.scaleweight;
 
 ks = dkernelsGaussian(cdim);
 
-    function val = integrate(f,s,e)
-
-        function r = apply(t)
-            r = zeros(size(t));
-            for k = 1:length(t)
-                r(k) = f(t(k));
-            end
-        end
-
-        val = quad(@apply,s,e);    
-    end
-
-
     function [E v0] = lpathEnergy(x,Gtt)
         
         x = reshape(x,(1+dim)*dim,L);
@@ -93,7 +80,8 @@ ks = dkernelsGaussian(cdim);
             v = reshape(v,cdim*(1+cdim)*L,1);
         end
         
-        function Et = G(t)
+        function Et = G(tt)
+            t = intTime(tt,false,lddmmoptions);
             Gt = reshape(deval(Gtt,t),cCSP,L);
 
             Et = 0;

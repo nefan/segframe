@@ -27,44 +27,42 @@ else
     userOptions = [];
 end
 
-options = optimset();
-options.Method = 'lbfgs';
-options = optimset(options,'LargeScale','off','HessUpdate','bfgs');
-options = optimset(options,'GradObj','on');    
+options = [];
+options.Method = 'lbfgs';  
 if getOption(userOptions,'derivativeCheck')
-    options = optimset(options,'DerivativeCheck','on');
+    options.DerivativeCheck = 'on';
 else
-    options = optimset(options,'DerivativeCheck','off');
+    options.DerivativeCheck = 'off';   
 end
 
 % tolerance
 if isfield(userOptions,'tolFun')
-    options = optimset(options,'TolFun',userOptions.tolFun);
+%     options = optimset(options,'TolFun',userOptions.tolFun);
+    options.progTol = userOptions.tolFun;
 end
 if isfield(userOptions,'tolX')
-    options = optimset(options,'TolX',userOptions.tolX);
+%     options = optimset(options,'TolX',userOptions.tolX);
+    options.optTol = userOptions.tolX;
 end
 
 if isfield(userOptions,'maxIter')
-    options = optimset(options,'MaxIter',userOptions.maxIter);
+    options.MaxIter = userOptions.maxIter;
 else
-    options = optimset(options,'MaxIter',1000);
+    options.MaxIter = 1000;
 end
 if isfield(userOptions,'maxFunEvals')
-    options = optimset(options,'MaxFunEvals',userOptions.maxFunEvals);
+    options.MaxFunEvals = userOptions.maxFunEvals;
 else
-    options = optimset(options,'MaxFunEvals',1000);
+    options.MaxFunEvals = 1000;
 end
 
 
 % output options
 if getOption(userOptions,'verbose')
-    options = optimset(options,'Display','iter-detailed');
-    options = optimset(options,'Diagnostics','on');    
-    %options = optimset(options,'Display','final-detailed');    
-    %options = optimset(options,'OutputFcn',outfun); 
+    options.Display = 'full';
+%     options = optimset(options,'Diagnostics','on');    
 else
-    options = optimset(options,'Display','final');
+    options.Display = final;
 end
 
     function res = minFuncOptimizer(initialData, F, iterationVisualizer)        

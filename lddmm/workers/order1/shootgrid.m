@@ -21,6 +21,7 @@
 function [grid1 gridt] = shootgrid(grid0,rhott,lddmmoptions,varargin)
 
 dim = lddmmoptions.dim;
+cdim = lddmmoptions.cdim;
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 CSP = lddmmoptions.CSP;
@@ -42,11 +43,7 @@ if size(varargin,2) > 1
 end
 
 function dgrid = Gc(tt,gridt) % wrapper for C version
-    if ~backwards
-        t = tt;
-    else
-        t = 1-tt;
-    end
+    t = intTime(tt,backwards,lddmmoptions);  
     rhot = deval(rhott,t);
     
     if selectscale > 0
@@ -57,31 +54,29 @@ function dgrid = Gc(tt,gridt) % wrapper for C version
         rhots(dim+(selectscale-1)*dim+1:dim+(selectscale-1)*dim+dim,:) = rhot(dim+(selectscale-1)*dim+1:dim+(selectscale-1)*dim+dim,:);
         rhot = reshape(rhots,CSP*L,1);
     end
-    
-    dgrid = shootG(t,gridt,rhot,L,R,dim,scales.^2,scaleweight.^2);
-    if backwards
-        dgrid = -dgrid;
-    end
+       
+    dgrid = fastPointTransportOrder0(t,gridt,rhot,L,R,cdim,scales.^2,scaleweight.^2); 
+    dgrid = intResult(dgrid,backwards,lddmmoptions);
     
     % debug
     if getOption(lddmmoptions,'testC')
         assert(selectscale == -1); % not implemented for G
-        dgrid2 = G(t,gridt);
+        dgrid2 = G(tt,gridt);
         assert(norm(dgrid-dgrid2) < 10e-12);
     end
 end
 
-function dgrid = G(tt,grid) % slooow version    
-    if ~backwards
-        t = tt;
-    else
-        t = 1-tt;
-    end    
+function dgrid = G(tt,grid) % slooow version
+    t = intTime(tt,backwards,lddmmoptions);  
     grid = reshape(grid,3,Ngrid);
     
     dgrid = zeros(size(grid));
     
-    rhot = reshape(deval(rhott,t),CSP,L);
+    rhot = deval(rhott,t);
+    if dim ~= cdim
+        rhot = rho3dTo2dOrder0(rhot,lddmmoptions);
+    end
+    rhot = reshape(rhot,CSP,L);
     
     for i = 1:Ngrid % grid point
         for l = 1:L % particle
@@ -91,9 +86,7 @@ function dgrid = G(tt,grid) % slooow version
         end
     end
     
-    if backwards
-        dgrid = -dgrid;
-    end    
+    dgrid = intResult(dgrid,backwards,lddmmoptions);
     
     dgrid = reshape(dgrid,3*Ngrid,1);    
 end

@@ -47,20 +47,14 @@ function M = N1Ks(x,y,r,sw)
     M = -2/(sw^2*r^2)*exp(-sum((x-y).^2)/r^2)*(x-y);
 end
 
-function dgrid = Gc(tt,gridt) % wrapper for C version
-    if ~backwards
-        t = tt;
-    else
-        t = 1-tt;
-    end
+function dgrid = Gc(t,gridt) % wrapper for C version
+    t = intTime(t,backwards,lddmmoptions);
     
     Gt = deval(Gtt,t);
            
     dgrid = fastPointTransportOrder1(t,gridt,Gt,rhoj0,L,R,cdim,scales.^2,scaleweight.^2);
 
-    if backwards
-        dgrid = -dgrid;
-    end
+    dgrid = intResult(dgrid,backwards,lddmmoptions);
     
     % debug
     global testC
@@ -70,12 +64,8 @@ function dgrid = Gc(tt,gridt) % wrapper for C version
     end
 end
 
-function dgrid = G(tt,grid) % slooow version
-    if ~backwards
-        t = tt;
-    else
-        t = 1-tt;
-    end
+function dgrid = G(t,grid) % slooow version
+    t = intTime(t,backwards,lddmmoptions);    
     
     grid = reshape(grid,3,Ngrid);
     
@@ -103,9 +93,8 @@ function dgrid = G(tt,grid) % slooow version
             end
         end
     end 
-    if backwards
-        dgrid = -dgrid;
-    end
+    
+    dgrid = intResult(dgrid,backwards,lddmmoptions);
     
     dgrid = reshape(dgrid,3*Ngrid,1);    
 end

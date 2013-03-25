@@ -21,6 +21,7 @@
 function gradU = getImageU(IM,IF,moving,imageoptions,dim,L)
 
 scale = imageoptions.scale;
+range = imageoptions.range;
 order = imageoptions.order;
 if order == 0
     dimX1 = dim;
@@ -55,7 +56,6 @@ for l = 1:L
 %         axis equal
     else
         samplesl = [];
-        range = 3*scale;
         if dim == 2
             delta = 2*range/(2*range)*1;
             for x = -range:delta:range
@@ -102,12 +102,12 @@ for l = 1:L
 %        samplesl(2:end,2:end) = samplesl(2:end,1+idx);
     end
 
-    % compute values in moving image
+    % compute values in fixed image
     if dim == 2
-        vals = Spline2D(movingTransform([p(2)+samplesl(3,:)' p(1)+samplesl(2,:)']')',zeros(size(samplesl,2),1),IM,[0 0],double([1 1]),1);
+        vals = Spline2D(fixedTransform([p(2)+samplesl(3,:)' p(1)+samplesl(2,:)']')',zeros(size(samplesl,2),1),IF,[0 0],double([1 1]),1);
     else
         assert(dim == 3);
-        vals = SplineInterpolation(movingTransform([p(2)+samplesl(3,:); p(1)+samplesl(2,:); p(3)+samplesl(4,:)])',IM,[0 0 0],[1 1 1]);
+        vals = SplineInterpolation(fixedTransform([p(2)+samplesl(3,:); p(1)+samplesl(2,:); p(3)+samplesl(4,:)])',IF,[0 0 0],[1 1 1]);
     end
     samplesl(1,:) = vals;
 
@@ -148,13 +148,13 @@ end
 
             % measure similarity
             if dim == 2
-                [valS d2 d1] = PNorm2D(fixedTransform([evalPoints(2,:)' evalPoints(1,:)']')',...
-                    samplesl(1,:)',IF,[0 0],double([1 1]),1,samplesl(1+dim+1,:));
+                [valS d2 d1] = PNorm2D(movingTransform([evalPoints(2,:)' evalPoints(1,:)']')',...
+                    samplesl(1,:)',IM,[0 0],double([1 1]),1,samplesl(1+dim+1,:));
                 ds = [d1'; d2'];
             else
                 assert(dim == 3);
-                [valS d2 d1 d3] = PNorm(fixedTransform([evalPoints(2,:); evalPoints(1,:); evalPoints(3,:)])',...
-                    samplesl(1,:)',IF,[0 0 0],[1 1 1],Nsamples*samplesl(1+dim+1,:),1);                
+                [valS d2 d1 d3] = PNorm(movingTransform([evalPoints(2,:); evalPoints(1,:); evalPoints(3,:)])',...
+                    samplesl(1,:)',IM,[0 0 0],[1 1 1],Nsamples*samplesl(1+dim+1,:),1);                
                 ds = [d1'; d2'; d3'];
             end
 
