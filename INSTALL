@@ -30,8 +30,12 @@ Please download the minFunc_2012.zip archive, unzip it to the 'thirdparty' direc
 'matlab -nodesktop -nosplash -r "mexAll; exit;"')
 
 HistDist and LOI:
-The image similarity and interpolation parts is performed by the HistDist code
-by Sune Darkner (darkner@diku.dk). Please contact Sune for a copy and place the files in 'thirdparty'.
+The image similarity and interpolation parts is performed by the LOI code
+by Sune Darkner (darkner@diku.dk). Please download the file LOI.zip from
+http://image.diku.dk/darkner/LOI and unzip the files into the 'thirdparty'
+directory. Currently, the 2D spline interpolation and 2D image similarity code
+is not included in the LOI.zip file. This should be correctly shortly but
+please contact Sune for the files until then.
 
 sla:
 Clone it from 'https://github.com/nefan/sla' into the 'thirdparty' directory.

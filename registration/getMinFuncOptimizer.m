@@ -62,7 +62,7 @@ if getOption(userOptions,'verbose')
     options.Display = 'full';
 %     options = optimset(options,'Diagnostics','on');    
 else
-    options.Display = final;
+    options.Display = 'final';
 end
 
     function res = minFuncOptimizer(initialData, F, iterationVisualizer)        

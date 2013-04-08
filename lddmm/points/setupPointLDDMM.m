@@ -32,6 +32,9 @@ end
 lddmmoptions.L = size(moving,2);
 assert(lddmmoptions.L == size(fixed,2));
 
+% options
+lddmmoptions.reverse = false; % reversed integration only for image registration
+
 [methods lddmmoptions optimoptions] = setupLDDMM(moving,lddmmoptions,varargin{:});
 if ~isfield(pointoptions,'weights')
     pointoptions.weights = [];

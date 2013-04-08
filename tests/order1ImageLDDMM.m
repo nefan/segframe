@@ -26,13 +26,15 @@ imageoptions.randomSampling = false;
 
 % LDDMM options
 clear lddmmoptions
-lddmmoptions.scale = 10; % Gaussian kernels
-lddmmoptions.energyweight = [1 8]; % weighting between energy of curve and match
+lddmmoptions.scale = 25; % Gaussian kernels
+lddmmoptions.energyweight = [1 2^8]; % weighting between energy of curve and match
 lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
 lddmmoptions.order = 1;
 
 % control points
-lddmmoptions.controlPoints = [130; 105];
+% lddmmoptions.controlPoints = [130; 130];
+lddmmoptions.NpointsX = 10;
+lddmmoptions.NpointsY = 10;
 
 % output options
 % global globalOptions;
@@ -42,11 +44,10 @@ visoptions.dim = 2;
 
 % data
 DD = load('tests/data/images1.mat');
-addpath('thirdparty/histdist/code/');
 
 match = [];
-IM = DD.I;
-IF = DD.R;
+IM = DD.Im;
+IF = DD.If;
 
 options = getDefaultOptions();
 
@@ -57,3 +58,9 @@ result = runRegister(methods, options);
 % visualize
 visualizer = getImageVisualizer(methods.transport,IM,IF,visoptions,imageoptions);
 visualizer(result);
+
+figure(11), clf
+visoptions.dim = lddmmoptions.dim;
+visoptions.margin = 0;
+pointVisualizer = getPointVisualizer(methods.transport,methods.getMoving(),[],visoptions);
+pointVisualizer(result);
