@@ -72,7 +72,7 @@ if ~isfield(optimoptions,'verbose')
     optimoptions.verbose = true;
 end
 % optimoptions.derivativeCheck = true;
-% lddmmoptions.testC = true; % for dim 3
+lddmmoptions.testC = true;
 
 % methods
 if getOption(lddmmoptions,'sparsity')

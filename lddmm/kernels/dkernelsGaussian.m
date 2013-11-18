@@ -29,6 +29,10 @@ end
 function M = N2Ks(x,y,r,sw)
     M = 2/(sw^2*r^2)*exp(-sum((x-y).^2)/r^2)*(x-y);
 end
+function M = D1N1Ks(x,y,r,sw)
+    M = -2/(sw^2*r^2)*exp(-sum((x-y).^2)/r^2)*eye(dim)...
+        +4/(sw^2*r^4)*exp(-sum((x-y).^2)/r^2)*(x-y)*(x-y)';
+end
 function M = D2N1Ks(x,y,r,sw)
     M = 2/(sw^2*r^2)*exp(-sum((x-y).^2)/r^2)*eye(dim)...
         -4/(sw^2*r^4)*exp(-sum((x-y).^2)/r^2)*(x-y)*(x-y)';
@@ -44,6 +48,33 @@ end
 function M = D2D1N2Ksa(a,x,y,r,sw)
     M = 4/(sw^2*r^4)*exp(-sum((x-y).^2)/r^2)*(a*(x-y)'+(x-y)*a'+(x-y)'*a*eye(dim))...
         -8/(sw^2*r^6)*exp(-sum((x-y).^2)/r^2)*(x-y)'*a*(x-y)*(x-y)';
+end
+
+function v = He(n,x)
+    if n == 0
+        v = 1;
+    else if n == 1
+        v = x;
+    else if n == 2
+        v = x^2-1;
+    else if n == 3
+        v = x^3-3*x;
+    else if n == 4
+        v = x^4-6*x^2+3;
+    else if n == 5
+        v = x^5-10*x^3+15*x;
+    end
+    end
+    end
+    end
+    end
+    end
+end
+
+function v = DaKs(da,x,y,r,sw)
+    assert(dim == 3);
+    z = sqrt(2)*(x-y)/r;
+    v = 1/sw^2*(-sqrt(2)/r)^sum(da)*He(da(1),z(1))*He(da(2),z(2))*He(da(3),z(3))*exp(-sum(z.^2)/2);
 end
 
 function M = dKs(x,y,dx,dy,r,sw)
@@ -86,10 +117,13 @@ fs.d4gamma = @(x,y,r,sw) 1/(sw^2*r^8)*exp(-sum((x-y).^2)/r^2);
 fs.Ks = @Ks;
 fs.N1Ks = @N1Ks;
 fs.N2Ks = @N2Ks;
+fs.D1N1Ks = @D1N1Ks;
 fs.D2N1Ks = @D2N1Ks;
 fs.D1N2Ks = @D1N2Ks;
 fs.D2N2Ks = @D2N2Ks;
 fs.D2D1N2Ksa = @D2D1N2Ksa;
+
+fs.DaKs = @ DaKs;
 
 fs.dKs = @dKs;
 fs.dN1Ks = @dN1Ks;

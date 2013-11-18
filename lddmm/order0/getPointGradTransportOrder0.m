@@ -31,6 +31,9 @@ scaleweight = lddmmoptions.scaleweight;
 energyweight = lddmmoptions.energyweight;
 epsilon = lddmmoptions.epsilon;
 
+[Ks D1Ks D2Ks] = gaussianKernels();
+fs = dkernelsGaussian(cdim);
+
     function v0 = lgradTransport(v1, x, rhot)
 
         function dy = Gc(tt,ytt) % wrapper for cpu version of G
@@ -52,8 +55,8 @@ epsilon = lddmmoptions.epsilon;
                 dy2 = G(tt,ytt);  
                 assert(norm(dy-dy2) < epsilon);
             end
-        end       
-        [Ks D1Ks D2Ks] = gaussianKernels();
+        end               
+        
         function vt = Egradth(ttt)    
             vt = zeros(CSP*L,1);
             
@@ -82,6 +85,115 @@ epsilon = lddmmoptions.epsilon;
                 end
             end
         end
+        
+%         function dy = GM(tt,ytt) % Matrix version
+%             t = intTime(tt,true,lddmmoptions);
+% 
+%             rhott = deval(rhot,t);            
+%             if dim ~= cdim
+%                 yt = rho2dTo3dOrder0(ytt,lddmmoptions);
+%             end                
+%             
+%             rhotts = reshape(rhott,cCSP,L);
+%             xt = rhotts(1:cdim,:);
+%             at = rhotts((cdim+1):end,:);
+%             
+%             %%%%%%%%%
+% 
+%             function v = Mf(pmi,pml,i,l)
+%                 v = zeros(cdim);
+%                 sl = pml-1;
+% 
+%                 if pmi == 1 % position, row
+%                    if pml == 1 % position, col
+%                    else % momentum, col
+%                        v = scalarm(fs.Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),eye(cdim));
+%                    end
+%                 else % momentum, row
+%                    if pml == 1 % position, col
+%                    else % momentum, col                   
+%                        v = outer(-fs.N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),at(:,i));
+%                    end                
+%                 end
+% 
+%                 v = {mtov(v)};   
+%             end
+%             
+%             function v = DMf(pmi,pml,pmk,i,l,k)
+%                 v = zeros(cdim^2,cdim);
+%                 sl = pml-1;
+% 
+%                 if pmi == 1 % position, row
+%                    if pml == 1 % position, col
+%                        if pmk == 1 % position, derivative
+%                        else % momentum, derivative
+%                        end
+%                    else % momentum, col
+%                        if pmk == 1 % position, derivative
+%                            if i == k
+%                             v = d1scalarm(fs.N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl))',eye(cdim));
+%                            else if l == k
+%                                end
+%                             v = d1scalarm(fs.N2Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl))',eye(cdim));
+%                            end
+%                        else % momentum, derivative
+%                        end                                              
+%                    end
+%                 else % momentum, row
+%                    if pml == 1 % position, col
+%                        if pmk == 1 % position, derivative
+%                        else % momentum, derivative
+%                        end                       
+%                    else % momentum, col                   
+%                        if pmk == 1 % position, derivative
+%                            if i == k
+%                                v = d1outer(-fs.D1N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),at(:,i)) ...
+%                                    + 0*d2outer(-fs.N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),diag(at(:,i)));
+%                            else if l == k
+%                                v = d1outer(-fs.D2N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),at(:,i));
+%                                end
+%                            end
+%                         else % momentum, derivative                           
+%                            if i == k
+%                                v = d2outer(-fs.N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),diag(at(:,i)));
+%                            else if l == k
+%                                v = d1outer(-fs.D2N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl)),at(:,i));
+%                                end
+%                            end                            
+%                        end                                              
+%                    end                
+%                 end
+% 
+%                 v = {reshape(v,[],1)};   
+%             end            
+%             
+%             M = reshape(cell2mat(mmap(@Mf,1+R,1+R,L,L)),cdim,cdim,1+R,1+R,L,L);
+%             M = reshape(permute(M,[1 3 5 2 4 6]),cdim*(1+R)*L,cdim*(1+R)*L);
+%         
+%             DM = reshape(cell2mat(mmap(@DMf,1+R,1+R,1+R,L,L,L)),cdim,cdim,cdim,(1+R),(1+R),(1+R),L,L,L);
+%             DM = reshape(permute(DM,[1 4 7 3 6 9 2 5 8]),cdim*(1+R)*cdim*(1+R)*L*L,cdim*(1+R)*L);
+%             DMrhott = reshape(DM*rhott,cdim*(1+R)*L,cdim*(1+R)*L);
+% 
+%             dy = DMrhott'*yt+M'*yt; % product rule and transpose
+%             
+%             %%%%%%%%%
+% 
+%             if dim ~= cdim
+%                 dy = rho3dTo2dOrder0(dy,lddmmoptions);
+%             end
+%             
+%             dy = -intResult(dy,true,lddmmoptions); % sign for backwards integration already accounted for
+% 
+%             % debug
+%             if getOption(lddmmoptions,'testC')
+%                 dy2 = G(tt,ytt);  
+%                  if norm(dy-dy2) > epsilon
+%                      1;
+%                  end
+%                 assert(norm(dy-dy2) < epsilon);
+%             end
+%         end        
+        
         function dy = G(tt,ytt)
             ytt = reshape(ytt,1,CSP*L);
             t = intTime(tt,true,lddmmoptions);          
@@ -152,6 +264,7 @@ epsilon = lddmmoptions.epsilon;
         % integrate
         options = odeset('RelTol',1e-6,'AbsTol',1e-6);
         vt = ode45(@Gc,[0 1],reshape(v1,CSP,L),options); % solve backwards, cpu
+%         vt = ode45(@GM,[0 1],reshape(v1,CSP,L),options); % solve backwards, matrix
 %         vt = ode45(@G,[0 1],v1,options); % solve backwards, slooow matlab
         assert(vt.x(end) == 1);
         v0 = reshape(deval(vt,1),CSP*L,1);

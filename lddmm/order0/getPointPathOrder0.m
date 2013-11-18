@@ -25,61 +25,6 @@ cdim = lddmmoptions.cdim; % computations performed in cdim
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 cCSP = lddmmoptions.cCSP;
-scales = lddmmoptions.scales;
-scaleweight = lddmmoptions.scaleweight;
-
-[Ks D1Ks D2Ks] = gaussianKernels();
-
-    function drho = Gc(tt,rhot) % wrapper for C version
-        t = intTime(tt,false,lddmmoptions);
-        
-        drho = fastPointPathOrder0(t,rhot,L,R,cdim,scales.^2,scaleweight.^2);
-        
-        drho = intResult(drho,false,lddmmoptions);
-
-        % debug
-        if getOption(lddmmoptions,'testC')
-            drho2 = G(tt,rhot);
-            if norm(drho-drho2) > 10e-12
-                1;
-            end
-            assert(norm(drho-drho2) < 10e-12);
-        end
-    end
-
-    function drho = G(tt,rhot)  % slooow version
-        rhot = reshape(rhot,cCSP,L);
-        t = intTime(tt,false,lddmmoptions);
-
-        drho = zeros(size(rhot));
-
-        for i = 1:L % particle
-            xi = rhot(1:cdim,i);
-
-            for l = 1:L % particle
-                xl = rhot(1:cdim,l);
-
-                ximxl = xi-xl;
-
-                for sl = 1:R % scale
-                    d1ksl = D1Ks(xi,xl,scales(sl),scaleweight(sl));
-                    TWOd1kslximxl = 2*d1ksl*ximxl;
-
-                    % position
-                    drho(1:cdim,i) = drho(1:cdim,i)+Ks(xi,xl,scales(sl),scaleweight(sl))*rhot(cdim*(sl-1)+(1+cdim:2*cdim),l);
-
-                    for si = 1:R % scale
-                        % momentum
-                        drho(cdim*(si-1)+(1+cdim:2*cdim),i) = drho(cdim*(si-1)+(1+cdim:2*cdim),i) ...
-                            - TWOd1kslximxl*rhot(cdim*(sl-1)+(1+cdim:2*cdim),l)'*rhot(cdim*(si-1)+(1+cdim:2*cdim),i);
-                    end                
-                end
-            end
-        end
-
-        drho = intResult(drho,false,lddmmoptions);
-        drho = reshape(drho,L*cCSP,1);
-    end
 
     function rhot = pointPathOrder0(x)
         if dim == cdim
@@ -92,11 +37,11 @@ scaleweight = lddmmoptions.scaleweight;
             rho0(cdim+(1:cdim:cdim*R),:) = xx(1:dim:dim*R,:);
             rho0(cdim+(2:cdim:cdim*R),:) = xx(2:dim:dim*R,:);
         end
-        options = odeset('RelTol',1e-6,'AbsTol',1e-6);
-        rhot = ode45(@Gc,[0 1],reshape(rho0,L*cCSP,1),options); % C version
-%         rhot = ode45(@G,[0 1],reshape(rho0,L*cCSP,1),options); % matlab version
+        
+        options = odeset('RelTol',1e-6,'AbsTol',1e-6);   
+        [G] = getEvolutionEqs(lddmmoptions);
+        rhot = ode45(G,[0 1],reshape(rho0,L*cCSP,1),options);
         assert(rhot.x(end) == 1); % if not, integration failed     
-
     end
 
 pointPath = @pointPathOrder0;
