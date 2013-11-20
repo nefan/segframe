@@ -47,7 +47,8 @@ else
     [grid0{1} grid0{2}] = meshgrid(spacingX/2:spacingX:size(IF,1),spacingY/2:spacingY:size(IF,2));
 
     lddmmoptions.L = lddmmoptions.NpointsX*lddmmoptions.NpointsY;
-    moving = [reshape(grid0{1},1,lddmmoptions.L); reshape(grid0{2},1,lddmmoptions.L)]; 
+    moving = [reshape(grid0{1},1,lddmmoptions.L); reshape(grid0{2},1,lddmmoptions.L)];
+    imageoptions.h = max(spacingX,spacingY);
 end
 lddmmoptions.L = size(moving,2);
 
@@ -56,8 +57,14 @@ lddmmoptions.L = size(moving,2);
 [methods lddmmoptions optimoptions] = setupLDDMM(moving,lddmmoptions,varargin{:});
 
 % methods
-methods.F = getPointLDDMMF(getImageU(IM,IF,moving,imageoptions,lddmmoptions.dim,lddmmoptions.L),...
+switch imageoptions.measure
+    case 'LOI'
+        imageU = getImageULOI(IM,IF,moving,imageoptions,lddmmoptions.dim,lddmmoptions.L);
+    case 'L2'
+        imageU = getImageUL2(IM,IF,moving,imageoptions,lddmmoptions.dim,lddmmoptions.L);
+end        
+        
+methods.F = getPointLDDMMF(imageU,...
     methods,lddmmoptions);
-
 
 end

@@ -42,6 +42,7 @@ ks = dkernelsGaussian(cdim);
         initial(1:dim,:) = moving; % position
         initial(cdim+(1:cdim^2),:) = repmat(reshape(eye(cdim),cdim^2,1),1,L); % Dphi
         initial(cdim+cdim^2+(1:dim),:) = x(1:R*dim,:); % mu/rho0
+        initial(cdim+cdim^2+cdim+(1:cdim^2),:) = -rhoj0;
         
         options = odeset('RelTol',1e-6,'AbsTol',1e-6);
         [G] = getEvolutionEqs(lddmmoptions,rhoj0);

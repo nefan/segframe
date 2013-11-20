@@ -182,7 +182,7 @@ ks = dkernelsGaussian(dim);
 
             dy = zeros(size(ytt));
 
-            Gtt = reshape(deval(Gt,t),cdim*(1+cdim+1),L);
+            Gtt = reshape(deval(Gt,t),cCSP,L);
 
             for n = 1:L % update all particles
                 for i = 1:L % multiply
@@ -550,8 +550,8 @@ ks = dkernelsGaussian(dim);
             v1 = reshape(v1,CSP*L,1);
             % rest is zero
         end
-        wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
-%         wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
+%         wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
+        wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
         assert(wt.x(end) == 1);
         w0 = reshape(deval(wt,1),cgradCSP,L);
         if dim == cdim

@@ -91,13 +91,19 @@ end
         else if lddmmoptions.order == 1
             q1_a__bi = reshape(x((cdim+1):(cdim+cdim^2),:),cdim,cdim,L);
             mu0_a__i = x((cdim+cdim^2+1):(2*cdim+cdim^2),:);
-%             mu1_b_ai = reshape(x((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),cdim,cdim,L);
-            mu1__a_b__i = zeros(cdim,cdim,L);
-            for i=1:L
-                for b= 1:cdim
-                    mu1__a_b__i(:,b,i) = q1_a__bi(:,:,i)'\rhoj0(cdim*(b-1)+(1:cdim),i);
-                end
-            end
+            mu1__a_b__i = reshape(x((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),cdim,cdim,L);
+%             mu1__a_b__idebug = zeros(cdim,cdim,L);
+%             for i=1:L
+%                 for b= 1:cdim
+%                     mu1__a_b__idebug(:,:,i) = mu1__a_b__idebug(:,:,i)-(q1_a__bi(:,:,i)'\rhoj0(cdim*(b-1)+(1:cdim),i))*q1_a__bi(:,b,i)';
+%                 end
+%             end
+%             mu1__a_b__i = mu1__a_b__idebug;
+%             if norm(ttov(mu1__a_b__i-mu1__a_b__idebug)) > 1e-8
+%                 [ttov(mu1__a_b__i) ttov(mu1__a_b__idebug) ttov(mu1__a_b__i-mu1__a_b__idebug)]
+%                 tt
+%                 1;
+%             end
         else if lddmmoptions.order == 2
                 assert(false);
         end
@@ -120,98 +126,88 @@ end
             da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;
             v = ks.DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
             Vdebug = ks.D1N1Ks(q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-            assert(abs(v-Vdebug(g,b)) < 1e-10);
+            assert(abs(v-Vdebug(b,g)) < 1e-10);
         end        
         function v = D3Kf(i,j,b,g,d)
             da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;  da(d) = da(d)+1;
             v = ks.DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
         end
         
+        % compute kernel and derivatives
         K__ij = reshape(mmap(@Kf,L,L),L,L);
         D1K__ijb = reshape(mmap(@D1Kf,L,L,cdim),L,L,cdim);
         if lddmmoptions.order == 1
             D2K__ijbg = reshape(mmap(@D2Kf,L,L,cdim,cdim),L,L,cdim,cdim);
             D3K__ijbgd = reshape(mmap(@D3Kf,L,L,cdim,cdim,cdim),L,L,cdim,cdim,cdim);
         end
-        
-        % comments:
-        %   s->: shift dimension
-        %   n->: notation conversion / raise/lower indicies
-        %   c->: contraction
-        %   pc->: product and contraction
-        %   d->: diagonal
-        
-        % naming:
-        % _i: contravariant
-        % __: covariant
 
         % output arrays
         q0t_a__i = [];
         mu0t__ai = [];
         q1t_a__bi = [];
-        mu1t_b__ai = [];        
+        mu1t__a_b__i = [];        
         
-        q0t_a__i = tprodcntr(mu0_a__i,2,K__ij,2); % (mu0_a__i,K__ij) n-> (mu0_a__j,K__ij) pc-> q0t_a__i
+        q0t_a__i = tprodcntr(mu0_a__i,2,K__ij,2);
         if lddmmoptions.order == 1 
-            add_q0t_a__kij = tprodcntr(mu1__a_b__i,2,D1K__ijb,3); % (mu1__a_b__i,DK__ijb) n-> (mu1_ab__k,DK__ijb) pc-> add_q0t_a__kij
-            add_q0t_a__i = tcntr(add_q0t_a__kij,2,3); % XXX add_q0t_a__kij c-> add_q0t_a__i
-            q0t_a__i = q0t_a__i + add_q0t_a__i;
+            q0t_a__i = q0t_a__i + tcntr(tprodcntr(mu1__a_b__i,2,D1K__ijb,3),2,4); % XXX on contraction indices
         end        
         
-        e1_a__ib = tprodcntr(mu0_a__i,2,D1K__ijb,2); % (mu0_a__i,K__ijb) n-> (mu_a__j,K__ijb) pc-> e1_a__ib
+        e1_a__ib = tprodcntr(mu0_a__i,2,D1K__ijb,2);
+        e1_a__ibdebug = tprodcntr(mu0_a__i,2,D1K__ijb,2);
         if lddmmoptions.order == 1 
-            add_e1_a__kijb = tprodcntr(mu1__a_b__i,2,D2K__ijbg,4); % (mu1__a_b__i,D2K__ijbg) n-> (mu1_ag__k,D2K__ijbg) -> add_e1_a__kijb
-            add_e1_a__ib = -tcntr(add_e1_a__kijb,2,4); % XXX add_e1_a__kijb c-> add_e1_a__ib
-            e1_a__ib = e1_a__ib + add_e1_a__ib;
+            e1_a__ib = e1_a__ib + tcntr(tprodcntr(mu1__a_b__i,2,D2K__ijbg,4),2,4); % XXX on sign of summand (2nd term)
         end        
 
         if lddmmoptions.order == 1 
-            e2_a__ibg = -tprodcntr(mu0_a__i,2,D2K__ijbg,2); % XXX
-            add_e2_a__kijbg = tprodcntr(mu1__a_b__i,2,D3K__ijbgd,5);
-            add_e2_a__ibg = tcntr(add_e2_a__kijbg,2,4);
-            e2_a__ibg = e2_a__ibg + add_e2_a__ibg;
+            e2_a__ibg = tprodcntr(mu0_a__i,2,D2K__ijbg,2) + tcntr(tprodcntr(mu1__a_b__i,2,D3K__ijbgd,5),2,4); % XXX on sign (first term)
         end                
         
-        mu0t__ija = -tprodcntr(mu0_a__i,1,e1_a__ib,1); % (mu0_a__i,e1_a__ib) n-> (mu0_b__i,e1_b__ja) pc-> mu0t__ija
-        mu0t__ia = tdiag(mu0t__ija,1,2); % mu0t__ija d-> mu0t_ia
-        mu0t__ai = tshift(mu0t__ia,[2 1]); % mu0t__ia -> mu0t__ai
+        % TODO: shift tidag to tproddiag
+        mu0t__ai = -tshift(tdiag(tprodcntr(mu0_a__i,1,e1_a__ib,1),1,2),[2 1]);
         if lddmmoptions.order == 1 
-            add_mu0t__aibjg = tprodcntr(mu1__a_b__i,2,e2_a__ibg,3);
-            add_mu0t__ijg = tcntr(add_mu0t__aibjg,1,3);
-            add_mu0t__ig = tdiag(add_mu0t__ijg,1,2);
-            add_mu0t__ai = tshift(add_mu0t__ig,[2 1]);
-            mu0t__ai = mu0t__ai + add_mu0t__ai;
+            mu0t__ai = mu0t__ai + tshift(tcntr(tcntr(tproddiag(mu1__a_b__i,3,e2_a__ibg,2),2,6),1,3),[2 1]);
+            assert(norm(tshift(tdiag(tcntr(tprodcntr(mu1__a_b__i,2,e2_a__ibg,3),1,3),1,2),[2 1])-...
+                        tshift(tcntr(tcntr(tproddiag(mu1__a_b__i,3,e2_a__ibg,2),2,6),1,3),[2 1]) )< 1e-10);
         end
         
         if lddmmoptions.order == 1 
-            q1t_a__ibj = tprodcntr(e1_a__ib,3,q1_a__bi,1); % (e1_a__ib,q1_a__bi) n-> (e1_a__ig,q1_g__bj) pc-> q1t_a__ibj
-            q1t_a__ib = tdiag(q1t_a__ibj,2,4); % q1t_a__ibj d-> q1t_a__ib
-            q1t_a__bi = tshift(q1t_a__ib,[1 3 2]); % q1t_a__ib -> q1t_a__bi
+            mu1t__a_b__i = tshift(tdiag(tprodcntr(mu1__a_b__i,2,e1_a__ib,3),2,4),[1 3 2])-tshift(tdiag(tprodcntr(mu1__a_b__i,1,e1_a__ib,1),2,3),[3 1 2]);
+            q1t_a__bi = tshift(tdiag(tprodcntr(e1_a__ib,3,q1_a__bi,1),2,4),[1 3 2]);
+            
+            mu1t__a_b__i = reshape(mu1t__a_b__i,cdim^2,L);
             q1t_a__bi = reshape(q1t_a__bi,cdim^2,L);
         end
         
-        xt = [q0t_a__i; q1t_a__bi; mu0t__ai, mu1t_b__ai];
+        xt = [q0t_a__i; q1t_a__bi; mu0t__ai; mu1t__a_b__i];
         xt = ttov(xt);
         
         xt = intResult(xt,false,lddmmoptions);
 
-        % debug
-        if getOption(lddmmoptions,'testC')
-            if lddmmoptions.order == 0
-                drho2 = G0(tt,xx);
-            else if lddmmoptions.order == 1
-                drho2 = G1(tt,xx);
-            else if lddmmoptions.order == 2
-                    assert(false);
-            end
-            end
-            end
-            
-            if norm(xt-drho2) > 10e-12
-                1;
-            end
-            assert(norm(xt-drho2) < 10e-12);
-        end
+
+%         % debug
+%         if getOption(lddmmoptions,'testC')
+%             if lddmmoptions.order == 0
+%                 drho2 = G0(tt,xx);
+%             else if lddmmoptions.order == 1
+%                 drho2 = G1(tt,xx);
+%             else if lddmmoptions.order == 2
+%                     assert(false);
+%             end
+%             end
+%             end
+% 
+%             xtdebug = reshape(xt,[],L);
+%             xtdebug = reshape(xtdebug(1:(cdim+cdim^2+cdim),:),[],1);
+%             drho2 = reshape(drho2,[],L);
+%             drho2 = reshape(drho2(1:(cdim+cdim^2+cdim),:),[],1);
+%             
+%             if norm(xtdebug-drho2) > 1e-7
+%                 norm(xtdebug-drho2)
+%                 tt
+%                 1;                
+%             end
+% %             assert(norm(xtdebug-drho2) < 1e-12);
+%         end
     end
 
     function drho = G0c(tt,rhot) % wrapper for C version

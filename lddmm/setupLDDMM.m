@@ -59,7 +59,7 @@ if lddmmoptions.order == 0
     lddmmoptions.cCSP = lddmmoptions.cdim*(1+lddmmoptions.R); % for computations
 else
     lddmmoptions.CSP = lddmmoptions.dim*(1+1+lddmmoptions.dim); % forward column size particles
-    lddmmoptions.cCSP = lddmmoptions.cdim*(1+1+lddmmoptions.cdim); % for computations
+    lddmmoptions.cCSP = lddmmoptions.cdim*(1+1+2*lddmmoptions.cdim); % for computations
 end
 
 % tolerances

@@ -40,5 +40,3 @@ end
 
 T = reshape(T,[size1(s1) size1(d1)]);
 T = tshift(T,[1:(d1-1) ndims(T) d1:(ndims(T)-1)]);
-        
-end

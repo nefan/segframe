@@ -44,7 +44,7 @@ ks = dkernelsGaussian(cdim);
             assert(R == 1);
             s = 1;
             v = zeros(cdim*(1+cdim),L);
-            G0 = reshape(deval(Gtt,0),cdim*(1+cdim+1),L);
+            G0 = reshape(deval(Gtt,0),cCSP,L);
             for n = 1:L
                 xn = G0(1:cdim,n);
                 an = G0(cdim*(1+cdim)+(1:cdim),n); 

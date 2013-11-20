@@ -17,7 +17,7 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tcntr(T1,d1,T2,d2)
+function T = tprodcntr(T1,d1,T2,d2)
 %
 % contract tensor product of T1 and T2 over dimensions d1 and d2
 %

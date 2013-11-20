@@ -38,4 +38,6 @@ for i=1:size1(d1)
     T(:) = T(:) + T1s(:,i,i);
 end
 
-T = reshape(T,size1(s1));
+if length(size1(s1)) > 1
+    T = reshape(T,size1(s1));
+end
