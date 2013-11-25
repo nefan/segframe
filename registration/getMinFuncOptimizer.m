@@ -29,6 +29,12 @@ end
 
 options = [];
 options.Method = 'lbfgs';  
+if getOption(userOptions,'numDiff')
+    options.numDiff = 1;
+else
+    options.numDiff = 0;   
+end
+
 if getOption(userOptions,'derivativeCheck')
     options.DerivativeCheck = 'on';
 else

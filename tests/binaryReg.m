@@ -15,12 +15,13 @@ clear lddmmoptions
 % lddmmoptions.energyweight = [1 1e4]; % weighting between energy of curve and match
 lddmmoptions.energyweight = [0 10];
 % lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
-lddmmoptions.order = 0;
+lddmmoptions.order = 1;
 
 % optimization options
 optimoptions.tolFun = 1e-5;
 optimoptions.tolX = 1e-5;
 optimoptions.numDiff = false;
+optimoptions.derivativeCheck = false;
 
 % output options
 % global globalOptions;

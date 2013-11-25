@@ -25,13 +25,13 @@ imageoptions.measure = 'L2';
 
 % LDDMM options
 clear lddmmoptions
-lddmmoptions.scale = 25; % Gaussian kernels
 lddmmoptions.energyweight = [1 2^4]; % weighting between energy of curve and match
 lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
+lddmmoptions.order = 0;
 
 % control points
-lddmmoptions.NpointsX = 10;
-lddmmoptions.NpointsY = 10;
+lddmmoptions.NpointsX = 2;
+lddmmoptions.NpointsY = 2;
 
 % output options
 % global globalOptions;
@@ -49,13 +49,17 @@ IF = DD.If;
 spacingX = size(IF,1)/lddmmoptions.NpointsX;
 spacingY = size(IF,2)/lddmmoptions.NpointsY;
 imageoptions.scale = max(spacingX,spacingY)/2;
+lddmmoptions.scale = imageoptions.scale; % Gaussian kernels
 
 options = getDefaultOptions();
 
-[methods lddmmoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions);
+% optimization
+optimoptions.numDiff = true;
+
+[methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions,optimoptions);
 
 % visualizer
-visualizer = getImageVisualizer(methods.transport,IM,IF,visoptions,imageoptions);
+visualizer = getImageVisualizerL2(methods.transport,IM,IF,visoptions,imageoptions);
 methods.iterationVisualizer = visualizer;
 
 result = runRegister(methods, options);

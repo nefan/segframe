@@ -1,3 +1,4 @@
+%
 %  segframe, Copyright (C) 2009-2012, Stefan Sommer (sommer@diku.dk)
 %  https://github.com/nefan/segframe.git
 % 
@@ -17,29 +18,25 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tproddiag(T1,d1,T2,d2)
-%
-% diagonal of tensor product of T1 and T2 over dimensions d1 and d2 with result in d1
-%
+% sample image and derivatives
+function [sI,sD1,sD2] = linSampleI(I,D1I,D2I,ps,order)
+    dim = size(ps,1);
+    L = size(ps,2);
+    
+    sI = interpn(I,ps(1,:),ps(2,:),'linear',0);
 
-size1 = size(T1);
-size2 = size(T2);
+    sD1 = zeros(L,dim);
+    for i=1:dim
+        sD1(:,i) = interpn(D1I(:,:,i),ps(1,:),ps(2,:),'linear',0);
+    end
 
-assert(size1(d1)==size2(d2));
-
-s1 = [1:(d1-1) (d1+1):ndims(T1)];
-s2 = [1:(d2-1) (d2+1):ndims(T2)];
-T1s = tshift(T1,[s1 d1]);
-T2s = tshift(T2,[d2 s2]);
-
-T1s = reshape(T1s,[],size1(d1));
-T2s = reshape(T2s,size2(d2),[]);
-
-% do product over diagonal
-T = zeros(size(T1s,1),size1(d1),size(T2s,2));
-for i=1:size1(d1)
-    T(:,i,:) = T1s(:,i)*T2s(i,:);
+    sD2 = [];    
+    if order >= 1
+        sD2 = zeros(L,dim,dim);
+        for i=1:dim
+            for j=1:dim
+                sD2(:,i,j) = interpn(D2I(:,:,i,j),ps(1,:),ps(2,:),'linear',0);
+            end
+        end        
+    end
 end
-
-T = squeeze(reshape(T,[size1(s1) size1(d1) size2(s2)]));
-T = tshift(T,[1:(d1-1) tndims(T1) d1:(tndims(T1)-1) (tndims(T1)+1):tndims(T)]);

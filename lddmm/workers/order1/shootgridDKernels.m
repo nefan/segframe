@@ -25,6 +25,7 @@ cdim = lddmmoptions.cdim;
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 CSP = lddmmoptions.CSP;
+cCSP = lddmmoptions.cCSP;
 scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 Ngrid = numel(grid0{1});
@@ -52,6 +53,12 @@ function dgrid = Gc(t,gridt) % wrapper for C version
     
     Gt = deval(Gtt,t);
            
+    if cCSP == 2*cdim+2*cdim^2 % new tensor format
+        Gt = reshape(Gt,cCSP,L);
+        Gt = Gt(1:(2*cdim+cdim^2),:);
+        Gt = reshape(Gt,[],1);
+    end
+            
     dgrid = fastPointTransportOrder1(t,gridt,Gt,rhoj0,L,R,cdim,scales.^2,scaleweight.^2);
 
     dgrid = intResult(dgrid,backwards,lddmmoptions);

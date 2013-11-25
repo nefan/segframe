@@ -26,7 +26,6 @@ imageoptions.randomSampling = false;
 
 % LDDMM options
 clear lddmmoptions
-lddmmoptions.scale = 25; % Gaussian kernels
 lddmmoptions.energyweight = [1 2^8]; % weighting between energy of curve and match
 lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
 lddmmoptions.order = 1;
@@ -44,10 +43,13 @@ visoptions.dim = 2;
 
 % data
 DD = load('tests/data/images1.mat');
-
-match = [];
 IM = DD.Im;
 IF = DD.If;
+
+spacingX = size(IF,1)/lddmmoptions.NpointsX;
+spacingY = size(IF,2)/lddmmoptions.NpointsY;
+imageoptions.scale = max(spacingX,spacingY)/2;
+lddmmoptions.scale = imageoptions.scale; % Gaussian kernels
 
 options = getDefaultOptions();
 

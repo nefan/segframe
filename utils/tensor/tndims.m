@@ -17,29 +17,11 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tproddiag(T1,d1,T2,d2)
+function n = tndims(T1)
 %
-% diagonal of tensor product of T1 and T2 over dimensions d1 and d2 with result in d1
+% number of dimensions of tensor
 %
 
 size1 = size(T1);
-size2 = size(T2);
-
-assert(size1(d1)==size2(d2));
-
-s1 = [1:(d1-1) (d1+1):ndims(T1)];
-s2 = [1:(d2-1) (d2+1):ndims(T2)];
-T1s = tshift(T1,[s1 d1]);
-T2s = tshift(T2,[d2 s2]);
-
-T1s = reshape(T1s,[],size1(d1));
-T2s = reshape(T2s,size2(d2),[]);
-
-% do product over diagonal
-T = zeros(size(T1s,1),size1(d1),size(T2s,2));
-for i=1:size1(d1)
-    T(:,i,:) = T1s(:,i)*T2s(i,:);
-end
-
-T = squeeze(reshape(T,[size1(s1) size1(d1) size2(s2)]));
-T = tshift(T,[1:(d1-1) tndims(T1) d1:(tndims(T1)-1) (tndims(T1)+1):tndims(T)]);
+I = find(size1 ~= 1);
+n = length(I);

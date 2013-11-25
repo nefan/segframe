@@ -67,7 +67,7 @@ pathEnergy = methods.pathEnergy;
         % gradient at endpoint
         [U v1] = gradU(reshape(shot,dimY1*L,1));        
         y = energyweight*[Epath; U];    
-        if nargout == 1
+        if nargout == 1 || numel(v1) == 0 % gradient not needed or not provided by gradU
             return
         end        
         v1 = reshape(v1,[],L);

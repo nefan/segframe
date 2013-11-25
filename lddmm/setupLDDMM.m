@@ -71,8 +71,9 @@ lddmmoptions.epsilon = 10e-10;
 if ~isfield(optimoptions,'verbose')
     optimoptions.verbose = true;
 end
+% debugging
 % optimoptions.derivativeCheck = true;
-lddmmoptions.testC = true;
+% lddmmoptions.testC = true;
 
 % methods
 if getOption(lddmmoptions,'sparsity')

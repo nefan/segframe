@@ -18,7 +18,7 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function visualizer = getImageVisualizer(transport,IM,IF,visoptions,imageoptions)
+function visualizer = getImageVisualizerLOI(transport,IM,IF,visoptions,imageoptions)
 
 movingTransform = @(x) x;
 fixedTransform = @(x) x;

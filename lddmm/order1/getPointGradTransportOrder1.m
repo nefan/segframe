@@ -93,6 +93,12 @@ ks = dkernelsGaussian(dim);
             t = intTime(tt,true,lddmmoptions);
             Gtt = deval(Gt,t);
             
+            if cCSP == 2*cdim+2*cdim^2 % new tensor format
+                Gtt = reshape(Gtt,cCSP,L);
+                Gtt = Gtt(1:(2*cdim+cdim^2),:);
+                Gtt = reshape(Gtt,[],1);
+            end
+            
             dy = fastPointGradTransportOrder1(ytt,Gtt,reshape(rhoj0,[],1),L,R,cdim,scales.^2,scaleweight.^2,energyweight);
 %             dy = dy + Gtest(t,ytt); % until everything is implemented
 
@@ -550,8 +556,8 @@ ks = dkernelsGaussian(dim);
             v1 = reshape(v1,CSP*L,1);
             % rest is zero
         end
-%         wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
-        wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
+        wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
+%         wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
         assert(wt.x(end) == 1);
         w0 = reshape(deval(wt,1),cgradCSP,L);
         if dim == cdim

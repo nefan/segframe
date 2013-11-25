@@ -51,6 +51,7 @@ else
     imageoptions.h = max(spacingX,spacingY);
 end
 lddmmoptions.L = size(moving,2);
+imageoptions.moving = moving;
 
 
 % lddmm stuff

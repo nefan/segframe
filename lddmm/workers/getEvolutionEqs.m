@@ -24,13 +24,16 @@ dim = lddmmoptions.dim;
 cdim = lddmmoptions.cdim; % computations performed in cdim
 L = lddmmoptions.L;
 R = lddmmoptions.R;
+order = lddmmoptions.order;
 cCSP = lddmmoptions.cCSP;
 scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 epsilon = lddmmoptions.epsilon;
 
-[Ks D1Ks D2Ks] = gaussianKernels();
+[Ks D1Ks D2Ks] = gaussianKernels(); % depreceated
 ks = dkernelsGaussian(cdim);
+
+assert(order >= 0 && order <= 2); % supported orders
 
 rhoj0 = [];
 if size(varargin,2) > 0
@@ -86,28 +89,27 @@ end
         
         x = vtot(xx,[cCSP L]);
         q0_a_i = x(1:cdim,:);
-        if lddmmoptions.order == 0
-            mu0_a__i = x((cdim+1):(cdim+cdim),:);            
-        else if lddmmoptions.order == 1
-            q1_a__bi = reshape(x((cdim+1):(cdim+cdim^2),:),cdim,cdim,L);
-            mu0_a__i = x((cdim+cdim^2+1):(2*cdim+cdim^2),:);
-            mu1__a_b__i = reshape(x((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),cdim,cdim,L);
-%             mu1__a_b__idebug = zeros(cdim,cdim,L);
-%             for i=1:L
-%                 for b= 1:cdim
-%                     mu1__a_b__idebug(:,:,i) = mu1__a_b__idebug(:,:,i)-(q1_a__bi(:,:,i)'\rhoj0(cdim*(b-1)+(1:cdim),i))*q1_a__bi(:,b,i)';
+        switch order
+            case 0
+                mu0_a__i = x((cdim+1):(cdim+cdim),:);            
+            case 1
+                q1_a__bi = reshape(x((cdim+1):(cdim+cdim^2),:),cdim,cdim,L);
+                mu0_a__i = x((cdim+cdim^2+1):(2*cdim+cdim^2),:);
+                mu1__a_b__i = reshape(x((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),cdim,cdim,L);
+%                 mu1__a_b__idebug = zeros(cdim,cdim,L);
+%                 for i=1:L
+%                     for b= 1:cdim
+%                         mu1__a_b__idebug(:,:,i) = mu1__a_b__idebug(:,:,i)-(q1_a__bi(:,:,i)'\rhoj0(cdim*(b-1)+(1:cdim),i))*q1_a__bi(:,b,i)';
+%                     end
 %                 end
-%             end
-%             mu1__a_b__i = mu1__a_b__idebug;
-%             if norm(ttov(mu1__a_b__i-mu1__a_b__idebug)) > 1e-8
-%                 [ttov(mu1__a_b__i) ttov(mu1__a_b__idebug) ttov(mu1__a_b__i-mu1__a_b__idebug)]
-%                 tt
-%                 1;
-%             end
-        else if lddmmoptions.order == 2
-                assert(false);
-        end
-        end
+%                 mu1__a_b__i = mu1__a_b__idebug;
+%                 if norm(ttov(mu1__a_b__i-mu1__a_b__idebug)) > 1e-8
+%                     [ttov(mu1__a_b__i) ttov(mu1__a_b__idebug) ttov(mu1__a_b__i-mu1__a_b__idebug)]
+%                     tt
+%                     1;
+%                 end
+            case 2
+                assert(false)
         end
         
         assert(R == 1); % only single scale for now
@@ -147,36 +149,37 @@ end
         q1t_a__bi = [];
         mu1t__a_b__i = [];        
         
-        q0t_a__i = tprodcntr(mu0_a__i,2,K__ij,2);
-        if lddmmoptions.order == 1 
-            q0t_a__i = q0t_a__i + tcntr(tprodcntr(mu1__a_b__i,2,D1K__ijb,3),2,4); % XXX on contraction indices
-        end        
-        
+        % chi 
         e1_a__ib = tprodcntr(mu0_a__i,2,D1K__ijb,2);
-        e1_a__ibdebug = tprodcntr(mu0_a__i,2,D1K__ijb,2);
         if lddmmoptions.order == 1 
-            e1_a__ib = e1_a__ib + tcntr(tprodcntr(mu1__a_b__i,2,D2K__ijbg,4),2,4); % XXX on sign of summand (2nd term)
+            e1_a__ib = e1_a__ib + tcntr(tprodcntr(mu1__a_b__i,2,D2K__ijbg,4),2,4);
+            e2_a__ibg = tprodcntr(mu0_a__i,2,D2K__ijbg,2) + tcntr(tprodcntr(mu1__a_b__i,2,D3K__ijbgd,5),2,4);
         end        
-
-        if lddmmoptions.order == 1 
-            e2_a__ibg = tprodcntr(mu0_a__i,2,D2K__ijbg,2) + tcntr(tprodcntr(mu1__a_b__i,2,D3K__ijbgd,5),2,4); % XXX on sign (first term)
+        if lddmmoptions.order == 2             
         end                
         
-        % TODO: shift tidag to tproddiag
-        mu0t__ai = -tshift(tdiag(tprodcntr(mu0_a__i,1,e1_a__ib,1),1,2),[2 1]);
+        % mu
+        mu0t__ai = -tshift(tcntr(tproddiag(mu0_a__i,2,e1_a__ib,2),1,3),[2 1]);
         if lddmmoptions.order == 1 
             mu0t__ai = mu0t__ai + tshift(tcntr(tcntr(tproddiag(mu1__a_b__i,3,e2_a__ibg,2),2,6),1,3),[2 1]);
-            assert(norm(tshift(tdiag(tcntr(tprodcntr(mu1__a_b__i,2,e2_a__ibg,3),1,3),1,2),[2 1])-...
-                        tshift(tcntr(tcntr(tproddiag(mu1__a_b__i,3,e2_a__ibg,2),2,6),1,3),[2 1]) )< 1e-10);
-        end
-        
-        if lddmmoptions.order == 1 
-            mu1t__a_b__i = tshift(tdiag(tprodcntr(mu1__a_b__i,2,e1_a__ib,3),2,4),[1 3 2])-tshift(tdiag(tprodcntr(mu1__a_b__i,1,e1_a__ib,1),2,3),[3 1 2]);
-            q1t_a__bi = tshift(tdiag(tprodcntr(e1_a__ib,3,q1_a__bi,1),2,4),[1 3 2]);
-            
+
+            T = tproddiag(mu1__a_b__i,3,e1_a__ib,2);
+            mu1t__a_b__i = tshift(tcntr(T,2,5),[1 3 2])-tshift(tcntr(T,1,4),[3 1 2]);
             mu1t__a_b__i = reshape(mu1t__a_b__i,cdim^2,L);
-            q1t_a__bi = reshape(q1t_a__bi,cdim^2,L);
         end
+        if lddmmoptions.order == 2             
+        end                
+
+        % q
+        q0t_a__i = tprodcntr(mu0_a__i,2,K__ij,2);
+        if lddmmoptions.order == 1 
+            q0t_a__i = q0t_a__i + tcntr(tprodcntr(mu1__a_b__i,2,D1K__ijb,3),2,4);
+
+            q1t_a__bi = tshift(tdiag(tprodcntr(e1_a__ib,3,q1_a__bi,1),2,4),[1 3 2]);
+            q1t_a__bi = reshape(q1t_a__bi,cdim^2,L);                        
+        end                
+        if lddmmoptions.order == 2             
+        end                
         
         xt = [q0t_a__i; q1t_a__bi; mu0t__ai; mu1t__a_b__i];
         xt = ttov(xt);
@@ -206,7 +209,7 @@ end
 %                 tt
 %                 1;                
 %             end
-% %             assert(norm(xtdebug-drho2) < 1e-12);
+%             assert(norm(xtdebug-drho2) < 1e-12);
 %         end
     end
 
@@ -385,16 +388,13 @@ end
             dGt = reshape(dGt,L*cCSP,1);
         end
 
-if lddmmoptions.order == 0
-    evoG = @Gindex;
-else if lddmmoptions.order == 1
-    evoG = @Gindex;        
-else if lddmmoptions.order == 2
-    assert(false);
-else 
-    assert(false);
-end
-end
+switch order
+    case 0
+        evoG = @Gindex;
+    case 1
+        evoG = @Gindex;        
+    case 2
+        assert(false);
 end
 
 end
