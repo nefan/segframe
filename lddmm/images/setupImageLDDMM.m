@@ -23,7 +23,7 @@ function [methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoption
 % image specific
 imageoptions.reverse = false; % if true, measure in moving image
 lddmmoptions.reverse = ~imageoptions.reverse;
-imageoptions.scale = lddmmoptions.scale;
+imageoptions.scale = getOption(imageoptions,'scale',lddmmoptions.scale);
 imageoptions.range = getOption(imageoptions,'range',3*imageoptions.scale);
 % order: 0: only points information, 1: point and derivative information
 if ~isfield(lddmmoptions,'order')

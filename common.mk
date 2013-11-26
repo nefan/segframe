@@ -17,11 +17,19 @@
 #  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# libraries
-MINFUNC=thirdparty/minFunc_2012
-SLA=thirdparty/sla
 
-INCLUDEPATH=$(SLA)
+SEGFRAME=$(HOME)/projects/segframe
+
+# libraries
+MINFUNC=$(SEGFRAME)/thirdparty/minFunc_2012
+SLA=$(SEGFRAME)/thirdparty/sla
+
+# cljmex
+CLJMEXHOME=$(HOME)/projects/cljmex
+CLJMEXSRC=$(CLJMEXHOME)/src
+CLJMEXINCLUDE=$(CLJMEXHOME)/include
+
+INCLUDEPATH=$(SLA) $(CLJMEXINCLUDE)
 
 MATLAB=matlab
 MEX=mex

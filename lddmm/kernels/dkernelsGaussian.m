@@ -51,23 +51,21 @@ function M = D2D1N2Ksa(a,x,y,r,sw)
 end
 
 function v = He(n,x)
-    if n == 0
-        v = 1;
-    else if n == 1
-        v = x;
-    else if n == 2
-        v = x^2-1;
-    else if n == 3
-        v = x^3-3*x;
-    else if n == 4
-        v = x^4-6*x^2+3;
-    else if n == 5
-        v = x^5-10*x^3+15*x;
-    end
-    end
-    end
-    end
-    end
+    switch n
+        case 0
+            v = 1;
+        case 1
+            v = x;
+        case 2
+            v = x^2-1;
+        case 3
+            v = x^3-3*x;
+        case 4
+            v = x^4-6*x^2+3;
+        case 5
+            v = x^5-10*x^3+15*x;
+        otherwise
+            assert(false);
     end
 end
 
@@ -75,6 +73,65 @@ function v = DaKs(da,x,y,r,sw)
     assert(dim == 3);
     z = sqrt(2)*(x-y)/r;
     v = 1/sw^2*(-sqrt(2)/r)^sum(da)*He(da(1),z(1))*He(da(2),z(2))*He(da(3),z(3))*exp(-sum(z.^2)/2);
+end
+
+function [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = TKs(q0_a_i,scales,scaleweight)
+    R = length(scales);
+    assert(R == 1);
+    sl = 1;
+    L = size(q0_a_i,2);
+    cdim = size(q0_a_i,1);
+
+    function v = Kf(i,j)
+        v = Ks(q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+    end
+    function v = D1Kf(i,j,b)
+        da = zeros(cdim,1); da(b) = 1;            
+        v = DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+    end
+    function v = D2Kf(i,j,b,g)
+        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;
+        v = DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+    end        
+    function v = D3Kf(i,j,b,g,d)
+        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;  da(d) = da(d)+1;
+        v = DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+    end
+
+    % compute kernel and derivatives        
+
+    Ks__ij = reshape(mmap(@Kf,L,L),L,L);
+    if nargout >= 2
+        D1Ks__ijb = reshape(mmap(@D1Kf,L,L,cdim),L,L,cdim);
+    end
+    if nargout >=3
+        D2Ks__ijbg = reshape(mmap(@D2Kf,L,L,cdim,cdim),L,L,cdim,cdim);
+    end
+    if nargout >= 4
+        D3Ks__ijbgd = reshape(mmap(@D3Kf,L,L,cdim,cdim,cdim),L,L,cdim,cdim,cdim);
+    end        
+end
+
+function [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = TKsC(q0_a_i,scales,scaleweight)
+    R = length(scales);
+    assert(R == 1);
+    sl = 1;
+    L = size(q0_a_i,2);
+    cdim = size(q0_a_i,1);
+
+    % compute kernel and derivatives
+    switch nargout
+        case 1
+            [Ks__ij] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+        case 2
+            [Ks__ij,D1Ks__ijb] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+        case 3
+            [Ks__ij,D1Ks__ijb,D2Ks__ijbg] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+        case 4
+            [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));            
+        otherwise
+            assert(false);
+    end
 end
 
 function M = dKs(x,y,dx,dy,r,sw)
@@ -123,7 +180,9 @@ fs.D1N2Ks = @D1N2Ks;
 fs.D2N2Ks = @D2N2Ks;
 fs.D2D1N2Ksa = @D2D1N2Ksa;
 
-fs.DaKs = @ DaKs;
+fs.DaKs = @DaKs;
+
+fs.TKs = @TKsC;
 
 fs.dKs = @dKs;
 fs.dN1Ks = @dN1Ks;

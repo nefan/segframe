@@ -21,6 +21,7 @@
 include common.mk
 
 native := lddmm/workers/native
+kernels := lddmm/kernels
 utils := utils
 startup = startup.m
 
@@ -30,7 +31,7 @@ DOCSDIR=docs
 #-----------------------------------------------------------------------------
 # Make rules:
 #-----------------------------------------------------------------------------
-all: $(native) $(startup)
+all: $(native) $(kernels) $(startup)
 
 $(native):
 	$(MAKE) --directory=$@
@@ -50,5 +51,6 @@ clean:
 	rm -rf $(DOCSDIR)
 	rm $(startup)
 	$(MAKE) --directory=$(native) clean
+	$(MAKE) --directory=$(kernels) clean
 
-.PHONY: all $(native)
+.PHONY: all $(native) $(kernels)

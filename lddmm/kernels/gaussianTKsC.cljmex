@@ -1,0 +1,52 @@
+; cljmex definition file for 'gaussianTKsC.cpp'
+(use 'cljmex.core)
+
+; init cljmex
+(cljmex-init "gaussianTKsC")
+
+; define input arguments
+(argument :name 'q0_a_i
+          :type :real
+          :format :matrix
+          :rows 'dim
+          :cols 'L
+          :nonempty true
+        )
+
+(argument :name 'scales2
+          :type :real
+          :format :row-vector
+          :rows 'R
+          )
+
+(argument :name 'scaleweight2
+          :type :real
+          :format :row-vector
+          :rows 'R
+          )
+
+(argument :name 'dim
+          :type :int
+          :format :single
+          )
+
+(argument :name 'L
+          :type :int
+          :format :single
+          )
+
+(argument :name 'R
+          :type :int
+          :format :single
+          )
+
+; define output arguments
+(output :name 'K__ij
+        :type :real
+        :format :matrix
+        :rows 'L
+        :columns 'L
+        )
+
+; close cljmex
+(cljmex-end)

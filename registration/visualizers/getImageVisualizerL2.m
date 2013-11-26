@@ -68,7 +68,7 @@ end
         
         fprintf('Image matching results:\n')
         fprintf('pre-match 1-norm IM/IF: %f\n',norm(IMintrp-IFintrp,2)/numel(IFG));
-        fprintf('post-match 1-norm IM/IF: %f\n',norm(IMintrp-IFintrp,2)/numel(IFG));
+        fprintf('post-match 1-norm IM/IF: %f\n',norm(IMresult-IFintrp,2)/numel(IFG));
         fprintf('relative decrase (%%): %f\n',(1-norm(IMintrp-IFintrp,2)/norm(IMintrp-IFintrp,2))*100);
         fprintf('change 1-norm: %f\n',norm(IMresult-IMintrp,2)/numel(IFG));
         

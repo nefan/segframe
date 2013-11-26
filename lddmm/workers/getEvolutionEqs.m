@@ -112,36 +112,15 @@ end
                 assert(false)
         end
         
-        assert(R == 1); % only single scale for now
-        sl = 1; % 
-        
-        function v = Kf(i,j)
-            v = ks.Ks(q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-        end
-        function v = D1Kf(i,j,b)
-            da = zeros(cdim,1); da(b) = 1;            
-            v = ks.DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-            Vdebug = ks.N1Ks(q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-            assert(abs(v-Vdebug(b)) < 1e-10);
-        end
-        function v = D2Kf(i,j,b,g)
-            da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;
-            v = ks.DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-            Vdebug = ks.D1N1Ks(q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-            assert(abs(v-Vdebug(b,g)) < 1e-10);
-        end        
-        function v = D3Kf(i,j,b,g,d)
-            da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;  da(d) = da(d)+1;
-            v = ks.DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
-        end
-        
         % compute kernel and derivatives
-        K__ij = reshape(mmap(@Kf,L,L),L,L);
-        D1K__ijb = reshape(mmap(@D1Kf,L,L,cdim),L,L,cdim);
-        if lddmmoptions.order == 1
-            D2K__ijbg = reshape(mmap(@D2Kf,L,L,cdim,cdim),L,L,cdim,cdim);
-            D3K__ijbgd = reshape(mmap(@D3Kf,L,L,cdim,cdim,cdim),L,L,cdim,cdim,cdim);
-        end
+        switch lddmmoptions.order
+            case 0
+                [K__ij,D1K__ijb] = ks.TKs(q0_a_i,scales,scaleweight);
+            case 1
+                [K__ij,D1K__ijb,D2K__ijbg,D3K__ijbgd] = ks.TKs(q0_a_i,scales,scaleweight);
+            case 2
+                assert(false);
+        end        
 
         % output arrays
         q0t_a__i = [];
