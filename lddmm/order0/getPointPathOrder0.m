@@ -81,7 +81,11 @@ scaleweight = lddmmoptions.scaleweight;
         drho = reshape(drho,L*cCSP,1);
     end
 
-    function rhot = pointPathOrder0(x)
+    function rhot = pointPathOrder0(x,varargin)
+        tend = 1;
+        if size(varargin,2) > 0
+            tend = varargin{1};
+        end
         if dim == cdim
             rho0 = [moving; reshape(x,dim*R,L)];
         else
@@ -93,9 +97,9 @@ scaleweight = lddmmoptions.scaleweight;
             rho0(cdim+(2:cdim:cdim*R),:) = xx(2:dim:dim*R,:);
         end
         options = odeset('RelTol',1e-6,'AbsTol',1e-6);
-        rhot = ode45(@Gc,[0 1],reshape(rho0,L*cCSP,1),options); % C version
+        rhot = ode45(@Gc,[0 tend],reshape(rho0,L*cCSP,1),options); % C version
 %         rhot = ode45(@G,[0 1],reshape(rho0,L*cCSP,1),options); % matlab version
-        assert(rhot.x(end) == 1); % if not, integration failed     
+        assert(rhot.x(end) == tend); % if not, integration failed     
 
     end
 

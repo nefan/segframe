@@ -31,7 +31,12 @@ epsilon = lddmmoptions.epsilon;
 
 ks = dkernelsGaussian(cdim);
 
-    function Gt = pointPathOrder1(x)
+    function Gt = pointPathOrder1(x,varargin)
+        tend = 1;
+        if size(varargin,2) > 0
+            tend = varargin{1};
+        end
+        
         x = reshape(x,(1+dim)*dim,L);
         rhoj0 = x(dim+(1:dim^2),:);
         if dim ~= cdim
@@ -123,9 +128,9 @@ ks = dkernelsGaussian(cdim);
         initial(1:dim,:) = moving; % position
         initial(cdim+(1:cdim^2),:) = repmat(reshape(eye(cdim),cdim^2,1),1,L); % Dphi
         initial(cdim+cdim^2+(1:dim),:) = x(1:R*dim,:); % mu/rho0
-        Gt = ode45(@Gc,[0 1],reshape(initial,L*cCSP,1),options); % fast native version
-%         Gt = ode45(@G,[0 1],reshape(initial,L*cCSP,1),options); % matlab version
-        assert(Gt.x(end) == 1); % if not, integration failed
+        Gt = ode45(@Gc,[0 tend],reshape(initial,L*cCSP,1),options); % fast native version
+%         Gt = ode45(@G,[0 tend],reshape(initial,L*cCSP,1),options); % matlab version
+        assert(Gt.x(end) == tend); % if not, integration failed
 
     end
 

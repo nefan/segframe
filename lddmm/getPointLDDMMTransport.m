@@ -30,13 +30,17 @@ scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 energyweight = lddmmoptions.energyweight;
 
-    function res = ltransport(x, points, varargin)
+    function [res,Gt] = ltransport(x, points, varargin)
         backwards = false;
         if size(varargin,2) > 0
             backwards = varargin{1};
         end
+        tend = 1;
+        if size(varargin,2) > 1
+            tend = varargin{2};
+        end
         
-        Gt = pointPath(x); % rhot is a solver structure
+        Gt = pointPath(x,tend); % rhot is a solver structure
         
         if iscell(points)
             g0 = points;
@@ -50,7 +54,7 @@ energyweight = lddmmoptions.energyweight;
             end
         end
         if order == 0
-            g1 = shootgrid(g0,Gt,lddmmoptions,backwards);
+            g1 = shootgrid(g0,Gt,lddmmoptions,backwards,tend);
         else
             g1 = shootgridDKernels(x,g0,Gt,lddmmoptions,backwards);
         end
