@@ -17,29 +17,9 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tdiag(T1,d1,d2)
+function T = tscalar(s,T)
 %
-% take diagonal of tensor T1 over dimensions d1 and d2, d1<d2 with result in d1
+% elementwise scalar multiplication of tensor
 %
 
-assert(d1<d2);
-assert(T1.dims(d1)==T1.dims(d2));
-
-s1 = [1:(d1-1) (d1+1):(d2-1) (d2+1):tndims(T1)];
-
-T1s = tshift(T1,[s1 d1 d2]);
-
-T1sT = reshape(T1s.T,[],T1.dims(d1),T1.dims(d1));
-
-TT = zeros(size(T1sT,1),T1.dims(d1));
-for i=1:T1.dims(d1)
-    TT(:,i) = T1sT(:,i,i);
-end
-
-T = tensor(TT,[T1.dims(s1) T1.dims(d1)]);
-
-if isfield(T1,'indices')
-    T.indices = [T1.indices(s1) T1.indices(d1)];
-end
-
-T = tshift(T,[1:(d1-1) tndims(T) d1:(tndims(T)-1)]);
+T.T = s*T.T;

@@ -45,50 +45,55 @@ end
 [IFG,D1IFG,D2IFG] = smoothIG(IF,imageoptions);
 [IMG,D1IMG,D2IMG] = smoothIG(IM,imageoptions);
 [sIFG,sD1IFG,sD2IFG] = linSampleI(IFG,D1IFG,D2IFG,fixedTransform(moving),order);
+sIFG = tensor(sIFG,[L],'i');
+sD1IFG = tensor(sD1IFG,[L dim],'ia');
+sD2IFG = tensor(sD2IFG,[L dim dim],'iab');
 
     function [y,v] = lgradU(x)
         %
         % gradient, image matching
         %                
    
-        x = vtot(x,[dimX1 L]);
-        q0_a_i = x(1:dim,:);
+        x = reshape(x,dimX1,L);
+        q0 = tensor(x(1:dim,:),[dim L],'ai');
         
         % sample
-        [sIMG,sD1IMG,sD2IMG] = linSampleI(IMG,D1IMG,D2IMG,movingTransform(q0_a_i),order);
+        [sIMG,sD1IMG,sD2IMG] = linSampleI(IMG,D1IMG,D2IMG,movingTransform(q0.T),order);
+        sIMG = tensor(sIMG,[L],'i');
+        sD1IMG = tensor(sD1IMG,[L dim],'ia');
+        sD2IMG = tensor(sD2IMG,[L dim dim],'iab');
 
         if order == 1
-            q1_a__bi = reshape(x((dim+1):(dim+dim^2),:),dim,dim,L);
+                q1 = tensor(x((dim+1):(dim+dim^2),:),[dim dim L],'abi');
         end
         if order == 2
             assert(false);
         end
                 
         % measure similarity
-        ys0 = (sIFG-sIMG)';
-        y = h*sum(ttov(ys0).^2);
+        ys0 = tsub(sIFG,sIMG);
+        y = h/L*sum(ttov(ys0).^2);
         if order == 1
-            ys1 = sD1IFG-tcntr(tproddiag(sD1IMG,1,q1_a__bi,3),2,3);
-            y = y + h^3/12*sum(ttov(ys1).^2);
+            ys1 = tsub(sD1IFG,tcntr(tproddiag(sD1IMG,1,q1,3),2,3));
+            ys1.indices = 'ia';
+            y = y + h^3/(12*L)*sum(ttov(ys1).^2);
         end
         if order == 2
             assert(false); % add second order terms
         end
 
         % gradient
-        v = zeros(dimX1,L);
-        v(1:dim,:) = tshift(-2*h*tproddiag(ys0,1,sD1IMG,1),[2 1]);
+        v0 = tshift(tscalar(-2*h/L,tproddiag(ys0,1,sD1IMG,1)),[2 1]);
         
         if order == 1
-            v(1:dim,:) = v(1:dim,:)+tshift(-2*h*tcntr(tproddiag(ys1,1,tcntr(tproddiag(sD2IMG,1,q1_a__bi,3),2,5),1),2,4),[2 1]);
-            v(dim+(1:dim^2),:) = reshape(tshift(-2*h^3/12*tdiag(tproddiag(ys1,1,tdiag(tproddiag(sD1IMG,1,q1_a__bi,3),2,3),1),2,4),[3 2 1]),dim^2,L);
+            v0 = tsum(v0,tshift(tscalar(-2*h/L,tcntr(tproddiag(ys1,1,tcntr(tproddiag(sD2IMG,1,q1,3),2,5),1),2,4)),[2 1]));
+            v1 = tshift(tscalar(-2*h^3/(12*L),tdiag(tproddiag(ys1,1,tdiag(tproddiag(sD1IMG,1,q1,3),2,3),1),2,4)),[3 2 1]);
         end
         if order == 2
             assert(false); % add terms
         end        
                
-        y = y/L;
-        v = reshape(v,dimX1*L,1)/L;
+        v = reshape([v0.T; reshape(v1.T,dim^2,L)],dimX1*L,1);
     end
 
 gradU = @lgradU;

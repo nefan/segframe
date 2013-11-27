@@ -19,25 +19,25 @@
 
 function T = tcntr(T1,d1,d2)
 %
-% contract tensors T1 over dimensions d1 and d2
+% contract tensor T1 over dimensions d1 and d2
 %
 
-size1 = size(T1);
-
 assert(d1<d2);
-assert(size1(d1)==size1(d2));
+assert(T1.dims(d1) == T1.dims(d2));
 
-s1 = [1:(d1-1) (d1+1):(d2-1) (d2+1):ndims(T1)];
+s1 = [1:(d1-1) (d1+1):(d2-1) (d2+1):tndims(T1)];
 
 T1s = tshift(T1,[s1 d1 d2]);
 
-T1s = reshape(T1s,[],size1(d1),size1(d1));
+T1sT = reshape(T1s.T,[],T1.dims(d1),T1.dims(d1));
 
-T = zeros(size(T1s,1),1);
-for i=1:size1(d1)
-    T(:) = T(:) + T1s(:,i,i);
+TsT = zeros(size(T1sT,1),1);
+for i=1:T1.dims(d1)
+    TsT(:) = TsT(:) + T1sT(:,i,i);
 end
 
-if length(size1(s1)) > 1
-    T = reshape(T,size1(s1));
+T = tensor(TsT,T1.dims(s1));
+
+if isfield(T1,'indices')
+    T.indices = T1.indices(s1);
 end

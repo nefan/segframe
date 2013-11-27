@@ -17,11 +17,10 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function n = tndims(T1)
+function n = tndims(T)
 %
 % number of dimensions of tensor
 %
 
-size1 = size(T1);
-I = find(size1 ~= 1);
-n = length(I);
+n = length(T.dims);
+assert(numel(T.T) == prod(T.dims));

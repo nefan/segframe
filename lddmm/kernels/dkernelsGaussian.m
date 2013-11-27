@@ -75,60 +75,70 @@ function v = DaKs(da,x,y,r,sw)
     v = 1/sw^2*(-sqrt(2)/r)^sum(da)*He(da(1),z(1))*He(da(2),z(2))*He(da(3),z(3))*exp(-sum(z.^2)/2);
 end
 
-function [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = TKs(q0_a_i,scales,scaleweight)
+function [D0Ks,D1Ks,D2Ks,D3Ks] = TKs(q0,scales,scaleweight)
     R = length(scales);
     assert(R == 1);
     sl = 1;
-    L = size(q0_a_i,2);
-    cdim = size(q0_a_i,1);
+    L = q0.dims(2);
+    cdim = q0.dims(1);
 
     function v = Kf(i,j)
-        v = Ks(q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+        v = Ks(q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
     end
     function v = D1Kf(i,j,b)
         da = zeros(cdim,1); da(b) = 1;            
-        v = DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+        v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
     end
     function v = D2Kf(i,j,b,g)
         da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;
-        v = DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+        v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
     end        
     function v = D3Kf(i,j,b,g,d)
         da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;  da(d) = da(d)+1;
-        v = DaKs(da,q0_a_i(:,i),q0_a_i(:,j),scales(sl),scaleweight(sl));
+        v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
     end
 
     % compute kernel and derivatives        
 
-    Ks__ij = reshape(mmap(@Kf,L,L),L,L);
+    D0Ks = tensor(mmap(@Kf,L,L),[L L],'ij');
     if nargout >= 2
-        D1Ks__ijb = reshape(mmap(@D1Kf,L,L,cdim),L,L,cdim);
+        D1Ks = tensor(mmap(@D1Kf,L,L,cdim),[L L cdim],'ijb');
     end
     if nargout >=3
-        D2Ks__ijbg = reshape(mmap(@D2Kf,L,L,cdim,cdim),L,L,cdim,cdim);
+        D2Ks = tensor(mmap(@D2Kf,L,L,cdim,cdim),[L L cdim cdim],'ijbg');
     end
     if nargout >= 4
-        D3Ks__ijbgd = reshape(mmap(@D3Kf,L,L,cdim,cdim,cdim),L,L,cdim,cdim,cdim);
+        D3Ks = tensor(mmap(@D3Kf,L,L,cdim,cdim,cdim),[L L cdim cdim cdim],'ijbgd');
     end        
 end
 
-function [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = TKsC(q0_a_i,scales,scaleweight)
+function [D0Ks,D1Ks,D2Ks,D3Ks] = TKsC(q0_a_i,scales,scaleweight)
     R = length(scales);
     assert(R == 1);
     sl = 1;
-    L = size(q0_a_i,2);
-    cdim = size(q0_a_i,1);
+    L = q0.dims(2);
+    cdim = q0.dims(1);
 
     % compute kernel and derivatives
     switch nargout
         case 1
-            [Ks__ij] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+            [Ks__ij] = gaussianTKsC(q0.T,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+            D0Ks = tensor(Ks__ij,[L L],'ij');
         case 2
-            [Ks__ij,D1Ks__ijb] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+            [Ks__ij,D1Ks__ijb] = gaussianTKsC(q0.T,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+            D0Ks = tensor(Ks__ij,[L L],'ij');
+            D1Ks = tensor(D1Ks__ijb,[L L cdim],'ijb');
         case 3
-            [Ks__ij,D1Ks__ijb,D2Ks__ijbg] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+            [Ks__ij,D1Ks__ijb,D2Ks__ijbg] = gaussianTKsC(q0.T,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));
+            D0Ks = tensor(Ks__ij,[L L],'ij');
+            D1Ks = tensor(D1Ks__ijb,[L L cdim],'ijb');
+            D2Ks = tensor(D2Ks__ijbg,[L L cdim cdim],'ijbg');
         case 4
-            [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = gaussianTKsC(q0_a_i,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));            
+            [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd] = gaussianTKsC(q0.T,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));            
+            D0Ks = tensor(Ks__ij,[L L],'ij');
+            D1Ks = tensor(D1Ks__ijb,[L L cdim],'ijb');
+            D2Ks = tensor(D2Ks__ijbg,[L L cdim cdim],'ijbg');
+            D3Ks = tensor(D3Ks__ijbgd,[L L cdim cdim cdim],'ijbgd');
         otherwise
             assert(false);
     end
@@ -182,7 +192,7 @@ fs.D2D1N2Ksa = @D2D1N2Ksa;
 
 fs.DaKs = @DaKs;
 
-fs.TKs = @TKsC;
+fs.TKs = @TKs;
 
 fs.dKs = @dKs;
 fs.dN1Ks = @dN1Ks;

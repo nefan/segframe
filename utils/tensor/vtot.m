@@ -17,9 +17,14 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = vtot(v,dim)
+function T = vtot(v,dims,varargin)
 %
 % convert vector to tensor with specified dimensions
 %
 
-T = reshape(v,dim);
+
+if size(varargin,2) > 0
+    T = tensor(v,dims,varargin{1});
+else
+    T = tensor(v,dims);
+end

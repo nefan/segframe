@@ -36,6 +36,9 @@ all: $(native) $(kernels) $(startup)
 $(native):
 	$(MAKE) --directory=$@
 
+$(kernels):
+	$(MAKE) --directory=$@
+
 $(startup):
 	echo "addpath(genpath('registration'))" > startup.m
 	echo "addpath(genpath('lddmm'))" >> startup.m

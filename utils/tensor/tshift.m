@@ -22,4 +22,13 @@ function T = tshift(T,shift)
 % shift dimensions of tensor
 %
 
-T = permute(T,shift);
+assert(length(T.dims) == length(shift));
+
+if length(shift) > 1
+    T.T = permute(T.T,shift);
+    T.dims = T.dims(shift);
+
+    if isfield(T,'indices')
+        T.indices = T.indices(shift);
+    end
+end

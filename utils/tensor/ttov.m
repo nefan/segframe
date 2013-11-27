@@ -22,4 +22,4 @@ function v = ttov(T)
 % convert tensor to vector
 %
 
-v = reshape(T,[],1);
+v = reshape(T.T,[],1);

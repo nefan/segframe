@@ -20,26 +20,29 @@
 function T = tproddiag(T1,d1,T2,d2)
 %
 % diagonal of tensor product of T1 and T2 over dimensions d1 and d2 with result in d1
+% indicies updated if diagonal indices match
 %
 
-size1 = size(T1);
-size2 = size(T2);
+assert(T1.dims(d1)==T2.dims(d2));
 
-assert(size1(d1)==size2(d2));
-
-s1 = [1:(d1-1) (d1+1):ndims(T1)];
-s2 = [1:(d2-1) (d2+1):ndims(T2)];
+s1 = [1:(d1-1) (d1+1):tndims(T1)];
+s2 = [1:(d2-1) (d2+1):tndims(T2)];
 T1s = tshift(T1,[s1 d1]);
 T2s = tshift(T2,[d2 s2]);
 
-T1s = reshape(T1s,[],size1(d1));
-T2s = reshape(T2s,size2(d2),[]);
+T1sT = reshape(T1s.T,[],T1.dims(d1));
+T2sT = reshape(T2s.T,T2.dims(d2),[]);
 
 % do product over diagonal
-T = zeros(size(T1s,1),size1(d1),size(T2s,2));
-for i=1:size1(d1)
-    T(:,i,:) = T1s(:,i)*T2s(i,:);
+TT = zeros(size(T1sT,1),T1.dims(d1),size(T2sT,2));
+for i=1:T1.dims(d1)
+    TT(:,i,:) = T1sT(:,i)*T2sT(i,:);
 end
 
-T = squeeze(reshape(T,[size1(s1) size1(d1) size2(s2)]));
+T = tensor(TT,[T1.dims(s1) T1.dims(d1) T2.dims(s2)]);
+
+if isfield(T1,'indices') && isfield(T2,'indices') && T1.indices(d1) == T2.indices(d2)
+    T.indices = [T1.indices(s1) T1.indices(d1) T2.indices(s2)];
+end
+
 T = tshift(T,[1:(d1-1) tndims(T1) d1:(tndims(T1)-1) (tndims(T1)+1):tndims(T)]);

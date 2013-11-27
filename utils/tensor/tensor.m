@@ -17,29 +17,19 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tdiag(T1,d1,d2)
+function T = tensor(M,dims,varargin)
 %
-% take diagonal of tensor T1 over dimensions d1 and d2, d1<d2 with result in d1
+% create tensor object
 %
 
-assert(d1<d2);
-assert(T1.dims(d1)==T1.dims(d2));
-
-s1 = [1:(d1-1) (d1+1):(d2-1) (d2+1):tndims(T1)];
-
-T1s = tshift(T1,[s1 d1 d2]);
-
-T1sT = reshape(T1s.T,[],T1.dims(d1),T1.dims(d1));
-
-TT = zeros(size(T1sT,1),T1.dims(d1));
-for i=1:T1.dims(d1)
-    TT(:,i) = T1sT(:,i,i);
+if length(dims) > 1
+    T.T = reshape(M,dims);
+else
+    T.T = reshape(M,[dims 1]);
 end
+T.dims = dims;
 
-T = tensor(TT,[T1.dims(s1) T1.dims(d1)]);
-
-if isfield(T1,'indices')
-    T.indices = [T1.indices(s1) T1.indices(d1)];
+if size(varargin,2) > 0
+    T.indices = varargin{1};
+    assert(length(T.indices) == tndims(T));
 end
-
-T = tshift(T,[1:(d1-1) tndims(T) d1:(tndims(T)-1)]);

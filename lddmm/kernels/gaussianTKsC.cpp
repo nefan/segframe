@@ -51,6 +51,7 @@ cljmex_start()
     double *D3Ks__ijbgd = mxGetPr (pargout[3]);
 
     // sum the entries in the sparse array R
+#pragma omp parallel for schedule(static) shared(K__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd)
     for (int j=0; j<L; j++)
         for (int i=0; i<L; i++) {
             Vector3<scalar> xi(&q0_a_i.x[q0_a_i.rows*i]);

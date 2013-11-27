@@ -22,17 +22,18 @@ function T = tprodcntr(T1,d1,T2,d2)
 % contract tensor product of T1 and T2 over dimensions d1 and d2
 %
 
-size1 = size(T1);
-size2 = size(T2);
-
-s1 = [1:(d1-1) (d1+1):ndims(T1)];
-s2 = [1:(d2-1) (d2+1):ndims(T2)];
+s1 = [1:(d1-1) (d1+1):tndims(T1)];
+s2 = [1:(d2-1) (d2+1):tndims(T2)];
 T1s = tshift(T1,[s1 d1]);
 T2s = tshift(T2,[d2 s2]);
 
-T1s = reshape(T1s,[],size1(d1));
-T2s = reshape(T2s,size2(d2),[]);
+T1sT = reshape(T1s.T,[],T1.dims(d1));
+T2sT = reshape(T2s.T,T2.dims(d2),[]);
 
-T = T1s*T2s; % do product and contraction
+M = T1sT*T2sT; % do product and contraction
 
-T = reshape(T,[size1(s1) size2(s2)]);
+T = tensor(M,[T1.dims(s1) T2.dims(s2)]);
+
+if isfield(T1,'indices') && isfield(T2,'indices')
+    T.indices = [T1.indices(s1) T2.indices(s2)];
+end

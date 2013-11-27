@@ -22,12 +22,13 @@ function T = tprod(T1,T2)
 % tensor product between tensors T1 and T2
 %
 
-size1 = size(T1);
-size2 = size(T2);
+T1T = reshape(T1.T,[],1);
+T2T = reshape(T2.T,1,[]);
 
-T1 = reshape(T1,[],1);
-T2 = reshape(T2,1,[]);
+TT = T1T*T2T; % do product
 
-T = T1*T2; % do product
+T = tensor(TT,[T1.dims T2.dims]);
 
-T = reshape(T,[size1 size2]);
+if isfield(T1,'indices') && isfield(T2,'indices')
+    T.indices = [T1.indices T2.indices];
+end
