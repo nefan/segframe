@@ -18,14 +18,19 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function pointShot = getPointPath(moving,lddmmoptions)
+function M3d = T22dTo3d(M2d,lddmmoptions)
 
-order = lddmmoptions.order;
+%
+% shift from 2d to 3d representation, M^3xL
+%
+dim = lddmmoptions.dim;
+cdim = lddmmoptions.cdim; % computations performed in cdim
+L = lddmmoptions.L;
+R = lddmmoptions.R;
+assert(R == 1);
 
-if order == 0
-    pointShot = getPointPathOrder0(moving,lddmmoptions);
-else
-    pointShot = getPointPathOrder1(moving,lddmmoptions);
-end
-
-end
+assert(dim == 2 && cdim == 3); % shift from 2d to 3d
+M2d = reshape(M2d,dim,dim,dim,L);
+M3d = zeros(cdim,cdim,cdim,L);
+M3d(1:dim,1:dim,1:dim,:) = M2d;
+M3d = reshape(M3d,cdim^3*L,1);

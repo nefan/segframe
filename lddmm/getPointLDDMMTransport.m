@@ -18,7 +18,7 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function transport = getPointLDDMMTransport(pointPath,lddmmoptions)
+function transport = getPointLDDMMTransport(pointPath,moving,lddmmoptions)
 
 dim = lddmmoptions.dim;
 cdim = lddmmoptions.cdim; % computations performed in cdim
@@ -36,7 +36,8 @@ energyweight = lddmmoptions.energyweight;
             backwards = varargin{1};
         end
         
-        Gt = pointPath(x); % rhot is a solver structure
+        ic = pathIC(x,moving,lddmmoptions);        
+        Gt = pointPath(ic); % rhot is a solver structure
         
         if iscell(points)
             g0 = points;

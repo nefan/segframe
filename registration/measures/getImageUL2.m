@@ -22,16 +22,7 @@ function gradU = getImageUL2(IM,IF,moving,imageoptions,dim,L)
 
 order = imageoptions.order;
 h = imageoptions.h;
-switch order
-    case 0
-        dimX1 = dim;
-    case 1
-        dimX1 = dim+dim^2;
-    case 2
-        dimX1 = 2*dim+dim^2;
-    otherwise
-        assert(false);
-end
+dimq = imageoptions.dimq;
 movingTransform = @(x) x;
 fixedTransform = @(x) x;
 if isfield(imageoptions,'movingTransform')
@@ -44,24 +35,28 @@ end
 % smooth and sample IF
 [IFG,D1IFG,D2IFG] = smoothIG(IF,imageoptions);
 [IMG,D1IMG,D2IMG] = smoothIG(IM,imageoptions);
-[sIFG,sD1IFG,sD2IFG] = linSampleI(IFG,D1IFG,D2IFG,fixedTransform(moving),order);
+[sIFG,sD1IFG,sD2IFG] = linSampleI(IFG,D1IFG,D2IFG,fixedTransform(moving),imageoptions);
 sIFG = tensor(sIFG,[L],'i');
 sD1IFG = tensor(sD1IFG,[L dim],'ia');
-sD2IFG = tensor(sD2IFG,[L dim dim],'iab');
+if order >= 2
+    sD2IFG = tensor(sD2IFG,[L dim dim],'iab');
+end
 
     function [y,v] = lgradU(x)
         %
         % gradient, image matching
         %                
    
-        x = reshape(x,dimX1,L);
+        x = reshape(x,dimq,L);
         q0 = tensor(x(1:dim,:),[dim L],'ai');
         
         % sample
-        [sIMG,sD1IMG,sD2IMG] = linSampleI(IMG,D1IMG,D2IMG,movingTransform(q0.T),order);
+        [sIMG,sD1IMG,sD2IMG] = linSampleI(IMG,D1IMG,D2IMG,movingTransform(q0.T),imageoptions);
         sIMG = tensor(sIMG,[L],'i');
         sD1IMG = tensor(sD1IMG,[L dim],'ia');
-        sD2IMG = tensor(sD2IMG,[L dim dim],'iab');
+        if order >= 1
+            sD2IMG = tensor(sD2IMG,[L dim dim],'iab');
+        end
 
         if order == 1
                 q1 = tensor(x((dim+1):(dim+dim^2),:),[dim dim L],'abi');
@@ -92,8 +87,15 @@ sD2IFG = tensor(sD2IFG,[L dim dim],'iab');
         if order == 2
             assert(false); % add terms
         end        
-               
-        v = reshape([v0.T; reshape(v1.T,dim^2,L)],dimX1*L,1);
+
+        switch order
+            case 0                
+                v = reshape(v0.T,dimq*L,1);
+            case 1
+                v = reshape([v0.T; reshape(v1.T,dim^2,L)],dimq*L,1);
+            case 2
+                assert(false);
+        end
     end
 
 gradU = @lgradU;

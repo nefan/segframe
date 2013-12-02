@@ -24,13 +24,11 @@ dim = lddmmoptions.dim;
 L = lddmmoptions.L;
 R = lddmmoptions.R;
 order = lddmmoptions.order;
+CSP = lddmmoptions.CSP;
+
 
     function initialData = lgetInitialData()
-        if order == 0
-            initialData = zeros(R*dim*L,1);
-        else
-            initialData = zeros((dim+dim^2)*L,1);
-        end
+        initialData = zeros(CSP/2*L,1);
     end
 
 getInitialData = @lgetInitialData;

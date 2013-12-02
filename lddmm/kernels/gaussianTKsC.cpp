@@ -34,22 +34,6 @@ cljmex_start()
     const int sl = 0;
     assert(order == 0);
 
-    // hardcoded - move to cljmex
-    mwSize D1Ksdim[3] = {L, L, dim};
-    mwSize D1KsdimI[2] = {D1Ksdim[0], D1Ksdim[0]*D1Ksdim[1]};
-    pargout[1] = (mxArray *)mxCreateNumericArray(3,D1Ksdim,mxDOUBLE_CLASS,mxREAL);
-    double *D1Ks__ijb = mxGetPr (pargout[1]);
-
-    mwSize D2Ksdim[4] = {L, L, dim, dim};
-    mwSize D2KsdimI[3] = {D2Ksdim[0], D2Ksdim[0]*D2Ksdim[1], D2Ksdim[0]*D2Ksdim[1]*D2Ksdim[2]};
-    pargout[2] = (mxArray *)mxCreateNumericArray(4,D2Ksdim,mxDOUBLE_CLASS,mxREAL);
-    double *D2Ks__ijbg = mxGetPr (pargout[2]);
-
-    mwSize D3Ksdim[5] = {L, L, dim, dim, dim};
-    mwSize D3KsdimI[4] = {D3Ksdim[0], D3Ksdim[0]*D3Ksdim[1], D3Ksdim[0]*D3Ksdim[1]*D3Ksdim[2], D3Ksdim[0]*D3Ksdim[1]*D3Ksdim[2]*D3Ksdim[3]};
-    pargout[3] = (mxArray *)mxCreateNumericArray(5,D3Ksdim,mxDOUBLE_CLASS,mxREAL);
-    double *D3Ks__ijbgd = mxGetPr (pargout[3]);
-
     // sum the entries in the sparse array R
 #pragma omp parallel for schedule(static) shared(K__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd)
     for (int j=0; j<L; j++)
@@ -64,35 +48,46 @@ cljmex_start()
 
                 for (int b=0; b<dim; b++) {
                     Vector3<int> da; da.set(1,b);
-                    D1Ks__ijb[i+D1KsdimI[0]*j+D1KsdimI[1]*b] =
+                    D1Ks__ijb.x[i+D1Ks__ijb.dimsI[0]*j+D1Ks__ijb.dimsI[1]*b] =
                         gs::DaKs(da,xi-xj,sqrt(scales2.x[sl]),ks);
 
                     if (nargout > 2) {
 
                         for (int g=0; g<dim; g++) {
                             Vector3<int> db = da; db.set(db[g]+1,g);
-                            D2Ks__ijbg[i+D2KsdimI[0]*j+D2KsdimI[1]*b+D2KsdimI[2]*g] =
+                            D2Ks__ijbg.x[i+D2Ks__ijbg.dimsI[0]*j+D2Ks__ijbg.dimsI[1]*b+D2Ks__ijbg.dimsI[2]*g] =
                                 gs::DaKs(db,xi-xj,sqrt(scales2.x[sl]),ks);
 
                             if (nargout > 3) {
 
                                 for (int d=0; d<dim; d++) {
                                     Vector3<int> dc = db; dc.set(dc[d]+1,d);
-                                    D3Ks__ijbgd[i+D3KsdimI[0]*j+D3KsdimI[1]*b+D3KsdimI[2]*g+D3KsdimI[3]*d] =
+                                    D3Ks__ijbgd.x[i+D3Ks__ijbgd.dimsI[0]*j+D3Ks__ijbgd.dimsI[1]*b+D3Ks__ijbgd.dimsI[2]*g+D3Ks__ijbgd.dimsI[3]*d] =
                                         gs::DaKs(dc,xi-xj,sqrt(scales2.x[sl]),ks);
+
+                                    if (nargout > 4) {
+
+                                        for (int e=0; e<dim; e++) {
+                                            Vector3<int> dd = dc; dd.set(dd[e]+1,e);
+                                            D4Ks__ijbgde.x[i+D4Ks__ijbgde.dimsI[0]*j+D4Ks__ijbgde.dimsI[1]*b+D4Ks__ijbgde.dimsI[2]*g+D4Ks__ijbgde.dimsI[3]*d+D4Ks__ijbgde.dimsI[4]*e] =
+                                                gs::DaKs(dd,xi-xj,sqrt(scales2.x[sl]),ks);
+
+                                            if (nargout > 5) {
+
+                                                for (int p=0; p<dim; p++) {
+                                                    Vector3<int> de = de; de.set(de[p]+1,p);
+                                                    D5Ks__ijbgdep.x[i+D5Ks__ijbgdep.dimsI[0]*j+D5Ks__ijbgdep.dimsI[1]*b+D5Ks__ijbgdep.dimsI[2]*g+D5Ks__ijbgdep.dimsI[3]*d+D5Ks__ijbgdep.dimsI[4]*e+D5Ks__ijbgdep.dimsI[5]*p] =
+                                                        gs::DaKs(de,xi-xj,sqrt(scales2.x[sl]),ks);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-
                         }
                     }
                 }
             }
         }
-
-//       plhs[0] = (mxArray *) mxCreateNumericArray 
-//         (mxGetNumberOfDimensions (prhs[0]),
-//          mxGetDimensions (prhs[0]), mxGetClassID (prhs[0]),
-//          mxIsComplex (prhs[0]));
-//       vri = mxGetPr (prhs[0]);
 
 cljmex_end()

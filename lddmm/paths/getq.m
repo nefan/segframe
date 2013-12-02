@@ -18,27 +18,33 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-% sample image and derivatives
-function [sI,sD1,sD2] = linSampleI(I,D1I,D2I,ps,imageoptions)
-    order = imageoptions.order;
-    background = imageoptions.background;
-    dim = size(ps,1);
-    L = size(ps,2);
-    
-    sI = interpn(I,ps(1,:),ps(2,:),'linear',background);
+function q = getq(Gt,t,lddmmoptions)
+%
+% extract point positionis and derivatives
+%
 
-    sD1 = zeros(L,dim);
-    for i=1:dim
-        sD1(:,i) = interpn(D1I(:,:,i),ps(1,:),ps(2,:),'linear',0);
-    end
+order = lddmmoptions.order;
+dim = lddmmoptions.dim;
+cdim = lddmmoptions.cdim; % computations performed in cdim
+dimq = lddmmoptions.dimq;
+L = lddmmoptions.L;
+R = lddmmoptions.R;
+assert(R == 1);
 
-    sD2 = [];    
+x = reshape(deval(Gt,t),[],L);
+
+if cdim == dim
+    q = x(1:dimq,:);
+else
+    assert(dim == 2 && cdim == 3); % shift from 3d to 2d
+    q = zeros(dimq,L);
+    q(1:dim,:) = x(1:dim,:);    
     if order >= 1
-        sD2 = zeros(L,dim,dim);
-        for i=1:dim
-            for j=1:dim
-                sD2(:,i,j) = interpn(D2I(:,:,i,j),ps(1,:),ps(2,:),'linear',0);
-            end
-        end        
+        q(dim+(1:dim^2),:) = reshape(T23dTo2d(x(cdim+(1:cdim^2),:),lddmmoptions),dim^2,L); % q1
     end
+    if order >= 2
+        q(dim+dim^2+(1:dim^3),:) = reshape(T33dTo2d(x(cdim+cdim^2+(1:cdim^3),:),lddmmoptions),dim^3,L); % q2
+    end
+end
+
 end

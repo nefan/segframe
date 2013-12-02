@@ -75,7 +75,7 @@ function v = DaKs(da,x,y,r,sw)
     v = 1/sw^2*(-sqrt(2)/r)^sum(da)*He(da(1),z(1))*He(da(2),z(2))*He(da(3),z(3))*exp(-sum(z.^2)/2);
 end
 
-function [D0Ks,D1Ks,D2Ks,D3Ks] = TKs(q0,scales,scaleweight)
+function [D0Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = TKs(q0,scales,scaleweight)
     R = length(scales);
     assert(R == 1);
     sl = 1;
@@ -94,11 +94,18 @@ function [D0Ks,D1Ks,D2Ks,D3Ks] = TKs(q0,scales,scaleweight)
         v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
     end        
     function v = D3Kf(i,j,b,g,d)
-        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1;  da(d) = da(d)+1;
+        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1; da(d) = da(d)+1;
         v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
     end
-
-    % compute kernel and derivatives        
+    function v = D4Kf(i,j,b,g,d,e)
+        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1; da(d) = da(d)+1; da(e) = da(e)+1;
+        v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
+    end
+    function v = D5Kf(i,j,b,g,d,e,p)
+        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1; da(d) = da(d)+1; da(e) = da(e)+1; da(p) = da(p)+1;
+        v = DaKs(da,q0.T(:,i),q0.T(:,j),scales(sl),scaleweight(sl));
+    end
+    % compute kernel and derivatives
 
     D0Ks = tensor(mmap(@Kf,L,L),[L L],'ij');
     if nargout >= 2
@@ -110,9 +117,15 @@ function [D0Ks,D1Ks,D2Ks,D3Ks] = TKs(q0,scales,scaleweight)
     if nargout >= 4
         D3Ks = tensor(mmap(@D3Kf,L,L,cdim,cdim,cdim),[L L cdim cdim cdim],'ijbgd');
     end        
+    if nargout >= 5
+        D4Ks = tensor(mmap(@D4Kf,L,L,cdim,cdim,cdim,cdim),[L L cdim cdim cdim cdim],'ijbgde');
+    end        
+    if nargout >= 6
+        D5Ks = tensor(mmap(@D5Kf,L,L,cdim,cdim,cdim,cdim,cdim),[L L cdim cdim cdim cdim cdim],'ijbgdep');
+    end        
 end
 
-function [D0Ks,D1Ks,D2Ks,D3Ks] = TKsC(q0_a_i,scales,scaleweight)
+function [D0Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = TKsC(q0,scales,scaleweight)
     R = length(scales);
     assert(R == 1);
     sl = 1;
@@ -139,6 +152,21 @@ function [D0Ks,D1Ks,D2Ks,D3Ks] = TKsC(q0_a_i,scales,scaleweight)
             D1Ks = tensor(D1Ks__ijb,[L L cdim],'ijb');
             D2Ks = tensor(D2Ks__ijbg,[L L cdim cdim],'ijbg');
             D3Ks = tensor(D3Ks__ijbgd,[L L cdim cdim cdim],'ijbgd');
+        case 5
+            [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd,D4Ks__ijbgde] = gaussianTKsC(q0.T,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));            
+            D0Ks = tensor(Ks__ij,[L L],'ij');
+            D1Ks = tensor(D1Ks__ijb,[L L cdim],'ijb');
+            D2Ks = tensor(D2Ks__ijbg,[L L cdim cdim],'ijbg');
+            D3Ks = tensor(D3Ks__ijbgd,[L L cdim cdim cdim],'ijbgd');
+            D4Ks = tensor(D4Ks__ijbgde,[L L cdim cdim cdim cdim],'ijbgde');
+        case 6
+            [Ks__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd,D4Ks__ijbgde,D5Ks__ijbgdep] = gaussianTKsC(q0.T,scales.^2,scaleweight.^2,int64(cdim),int64(L),int64(R));            
+            D0Ks = tensor(Ks__ij,[L L],'ij');
+            D1Ks = tensor(D1Ks__ijb,[L L cdim],'ijb');
+            D2Ks = tensor(D2Ks__ijbg,[L L cdim cdim],'ijbg');
+            D3Ks = tensor(D3Ks__ijbgd,[L L cdim cdim cdim],'ijbgd');
+            D4Ks = tensor(D4Ks__ijbgde,[L L cdim cdim cdim cdim],'ijbgde');
+            D5Ks = tensor(D5Ks__ijbgdep,[L L cdim cdim cdim cdim cdim],'ijbgdep');
         otherwise
             assert(false);
     end
@@ -192,7 +220,7 @@ fs.D2D1N2Ksa = @D2D1N2Ksa;
 
 fs.DaKs = @DaKs;
 
-fs.TKs = @TKs;
+fs.TKs = @TKsC;
 
 fs.dKs = @dKs;
 fs.dN1Ks = @dN1Ks;

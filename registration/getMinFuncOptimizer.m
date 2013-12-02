@@ -28,7 +28,12 @@ else
 end
 
 options = [];
-options.Method = 'lbfgs';  
+if isfield(userOptions,'method')
+    options.Method = userOptions.method;
+else
+    options.Method = 'lbfgs';  
+end
+
 if getOption(userOptions,'numDiff')
     options.numDiff = 1;
 else

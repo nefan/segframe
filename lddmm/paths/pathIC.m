@@ -18,32 +18,31 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function pointPath = getPointPathOrder0(moving,lddmmoptions)
+function y = pathIC(x,moving,lddmmoptions)
+
+order = lddmmoptions.order;
 
 dim = lddmmoptions.dim;
 cdim = lddmmoptions.cdim; % computations performed in cdim
 L = lddmmoptions.L;
 R = lddmmoptions.R;
-cCSP = lddmmoptions.cCSP;
+assert(R == 1);
 
-    function rhot = pointPathOrder0(x)
-        if dim == cdim
-            rho0 = [moving; reshape(x,dim*R,L)];
-        else
-            assert(dim == 2 && cdim == 3); % shift from 2d to 3d
-            rho0 = zeros(cdim+R*cdim,L);
-            rho0(1:dim,:) = moving;
-            xx = reshape(x,dim*R,L);
-            rho0(cdim+(1:cdim:cdim*R),:) = xx(1:dim:dim*R,:);
-            rho0(cdim+(2:cdim:cdim*R),:) = xx(2:dim:dim*R,:);
-        end
-        
-        options = odeset('RelTol',1e-6,'AbsTol',1e-6);   
-        [G] = getEvolutionEqs(lddmmoptions);
-        rhot = ode45(G,[0 1],reshape(rho0,L*cCSP,1),options);
-        assert(rhot.x(end) == 1); % if not, integration failed     
-    end
-
-pointPath = @pointPathOrder0;
+x = reshape(x,[],L);
+switch order
+    case 0
+        % variables: mu0
+        q0 = moving;
+        y = [q0; x];
+    case 1
+        q0 = moving;
+        q1 = repmat(reshape(eye(dim),dim^2,1),1,L);
+        y = [q0; q1; x];
+    case 2
+        q0 = moving;
+        q1 = repmat(reshape(eye(dim),dim^2,1),1,L);
+        q2 = zeros(dim^3,L);
+        y = [q0; q1; q2; x];                
+end
 
 end

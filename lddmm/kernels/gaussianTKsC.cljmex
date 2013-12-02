@@ -2,7 +2,8 @@
 (use 'cljmex.core)
 
 ; init cljmex
-(cljmex-init "gaussianTKsC")
+(cljmex-init "gaussianTKsC" 
+    :varargsout 6)
 
 ; define input arguments
 (argument :name 'q0_a_i
@@ -46,6 +47,36 @@
         :format :matrix
         :rows 'L
         :columns 'L
+        )
+
+(output :name 'D1Ks__ijb
+        :type :real
+        :format :multidimarray
+        :dims '(L L dim)
+        )
+
+(output :name 'D2Ks__ijbg
+        :type :real
+        :format :multidimarray
+        :dims '(L L dim dim)
+        )
+
+(output :name 'D3Ks__ijbgd
+        :type :real
+        :format :multidimarray
+        :dims '(L L dim dim dim)
+        )
+
+(output :name 'D4Ks__ijbgde
+        :type :real
+        :format :multidimarray
+        :dims '(L L dim dim dim dim)
+        )
+
+(output :name 'D5Ks__ijbgdep
+        :type :real
+        :format :multidimarray
+        :dims '(L L dim dim dim dim dim)
         )
 
 ; close cljmex

@@ -30,59 +30,15 @@ scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 epsilon = lddmmoptions.epsilon;
 
-[Ks D1Ks D2Ks] = gaussianKernels(); % depreceated
+% [Ks D1Ks D2Ks] = gaussianKernels(); % depreceated
 ks = dkernelsGaussian(cdim);
 
 assert(order >= 0 && order <= 2); % supported orders
 
-rhoj0 = [];
+rhoj0 = []; % depreceated
 if size(varargin,2) > 0
     rhoj0 = varargin{1};
 end
-
-    function drho = G0M(tt,rhot) % Matrix version
-        t = intTime(tt,false,lddmmoptions);
-        
-        rhots = reshape(rhot,cCSP,L);
-        xt = rhots(1:cdim,:);
-        at = rhots((cdim+1):end,:);
-        
-        function v = Mf(pmi,pml,i,l)
-            v = zeros(cdim);
-            sl = pml-1;
-            
-            if pmi == 1 % position, row
-               if pml == 1 % position, col
-               else % momentum, col
-                   sl = pml-1;
-                   v = ks.Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl))*eye(cdim);
-               end
-            else % momentum, row
-               if pml == 1 % position, col
-               else % momentum, col                   
-                   v = -ks.N1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl))*at(:,i)';
-               end                
-            end
-            
-            v = {mtov(v)};   
-        end
-        
-        M = reshape(cell2mat(mmap(@Mf,1+R,1+R,L,L)),cdim,cdim,1+R,1+R,L,L);
-        M = reshape(permute(M,[1 3 5 2 4 6]),cdim*(1+R)*L,cdim*(1+R)*L);
-        
-        drho = M*rhot;
-        
-        drho = intResult(drho,false,lddmmoptions);
-
-        % debug
-        if getOption(lddmmoptions,'testC')
-            drho2 = G0(tt,rhot);
-            if norm(drho-drho2) > 10e-12
-                1;
-            end
-            assert(norm(drho-drho2) < 10e-12);
-        end
-    end
 
     function xt = Gindex(tt,xx) % tensor version
         t = intTime(tt,false,lddmmoptions);
@@ -97,7 +53,11 @@ end
                 mu0 = tensor(x((cdim+cdim^2+1):(2*cdim+cdim^2),:),[cdim L],'ai');
                 mu1 = tensor(x((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),[cdim cdim L],'abi');
             case 2
-                assert(false)
+                q1 = tensor(x((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
+                q2 = tensor(x((cdim+cdim^2+1):(cdim+cdim^2+cdim^3),:),[cdim cdim cdim L],'abgi');
+                mu0 = tensor(x((cdim+cdim^2+cdim^3+1):(2*cdim+cdim^2+cdim^3),:),[cdim L],'ai');
+                mu1 = tensor(x((2*cdim+cdim^2+cdim^3+1):(2*cdim+2*cdim^2+cdim^3),:),[cdim cdim L],'abi');
+                mu2 = tensor(x((2*cdim+2*cdim^2+cdim^3+1):(2*cdim+2*cdim^2+2*cdim^3),:),[cdim cdim cdim L],'abgi');
         end
         
         % compute kernel and derivatives
@@ -107,21 +67,25 @@ end
             case 1
                 [Ks,D1Ks,D2Ks,D3Ks] = ks.TKs(q0,scales,scaleweight);
             case 2
-                assert(false);
+                [Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = ks.TKs(q0,scales,scaleweight);
         end        
 
         % chi 
         e1 = tprodcntr(mu0,2,D1Ks,2);
-        if lddmmoptions.order == 1 
+        if lddmmoptions.order >= 1 
             e1 = tsum(e1,tcntr(tprodcntr(mu1,2,D2Ks,4),2,4));
             e2 = tsum(tprodcntr(mu0,2,D2Ks,2),tcntr(tprodcntr(mu1,2,D3Ks,5),2,4));
         end        
-        if lddmmoptions.order == 2             
+        if lddmmoptions.order >= 2
+            e1 = tsum(e1,tcntr(tcntr(tprodcntr(mu2,3,D3Ks,5),2,7),2,4));
+            e2 = tsum(e2,tcntr(tcntr(tprodcntr(mu2,3,D4Ks,6),2,8),2,4));            
+            e3 = tsum(tsum(tprodcntr(mu0,2,D3Ks,2),tcntr(tprodcntr(mu1,2,D4Ks,6),2,4)),...
+                      tcntr(tcntr(tprodcntr(mu2,3,D5Ks,7),2,9),2,4));
         end                
         
         % mu
         mu0t = tscalar(-1,tshift(tcntr(tproddiag(mu0,2,e1,2),1,3),[2 1]));
-        if lddmmoptions.order == 1 
+        if lddmmoptions.order >= 1 
             mu0t = tsum(mu0t,tshift(tcntr(tcntr(tproddiag(mu1,3,e2,2),2,6),1,3),[2 1]));
             mu0t.indices = 'ai';
 
@@ -129,17 +93,34 @@ end
             mu1t = tsub(tshift(tcntr(T,2,5),[1 3 2]),tshift(tcntr(T,1,4),[3 1 2]));
             mu1t.indices = 'abi';
         end
-        if lddmmoptions.order == 2             
+        if lddmmoptions.order >= 2             
+            mu0t = tsub(mu0t,tshift(tcntr(tcntr(tcntr(tproddiag(mu2,4,e3,2),3,7),2,5),1,3),[2 1]));
+            mu0t.indices = 'ai';
+            
+            T = tproddiag(mu2,4,e2,2);
+            mu1t = tsub(tsub(tsum(mu1t,tshift(tcntr(tcntr(T,3,7),2,5),[1 3 2])),...
+                             tshift(tcntr(tcntr(T,3,7),1,4),[3 1 2])),...
+                        tshift(tcntr(tcntr(T,2,6),1,4),[3 1 2]));
+            mu1t.indices = 'abi';
+            
+            T = tproddiag(mu2,4,e1,2);
+            mu2t = tsub(tsum(tshift(tcntr(T,2,6),[1 4 2 3]),...
+                             tshift(tcntr(T,2,6),[1 4 2 3])),... % possible bug !!!!
+                        tshift(tcntr(T,1,5),[4 1 2 3]));
+            mu2t.indices = 'abgi';            
         end                
 
         % q
         q0t = tprodcntr(mu0,2,Ks,2);
-        if lddmmoptions.order == 1 
-            q0t = tsum(q0t,tcntr(tprodcntr(mu1,2,D1Ks,3),2,4));
-
+        if lddmmoptions.order >= 1 
+            q0t = tsum(q0t,tcntr(tprodcntr(mu1,3,D1Ks,2),2,4));
             q1t = tshift(tdiag(tprodcntr(e1,3,q1,1),2,4),[1 3 2]);
         end                
-        if lddmmoptions.order == 2             
+        if lddmmoptions.order >= 2
+            q0t = tsum(q0t,tcntr(tcntr(tprodcntr(mu2,4,D2Ks,2),3,6),2,4));
+            q2t = tshift(tsum(tcntr(tproddiag(tcntr(tproddiag(e2,2,q1,3),3,6),2,q1,3),3,5),...
+                              tcntr(tproddiag(e1,2,q2,4),3,4)),[1 3 4 2]);
+            q2t.indices = 'abgi';
         end                
         
         switch order
@@ -148,7 +129,7 @@ end
             case 1
                 xt = [q0t.T; reshape(q1t.T,cdim^2,L); mu0t.T; reshape(mu1t.T,cdim^2,L)];
             case 2
-                assert(false);
+                xt = [q0t.T; reshape(q1t.T,cdim^2,L); reshape(q2t.T,cdim^3,L); mu0t.T; reshape(mu1t.T,cdim^2,L); reshape(mu2t.T,cdim^3,L)];
         end
         
         xt = reshape(xt,[],1);
@@ -233,65 +214,6 @@ end
         drho = reshape(drho,L*cCSP,1);
     end
 
-        function dGt = G1c(tt,Gt) % wrapper for cpu version of G
-            t = intTime(tt,false,lddmmoptions);
-
-            dGt = fastPointPathOrder1(t,Gt,reshape(rhoj0,[],1),L,R,cdim,scales.^2,scaleweight.^2);
-            
-            dGt = intResult(dGt,false,lddmmoptions);
-
-            % debug
-            if getOption(lddmmoptions,'testC')
-                dGt2 = G1(tt,Gt);  
-                assert(norm(dGt-dGt2) < epsilon);
-            end
-        end           
-        
-%         function drho = G1M(tt,Gt) % Matrix version
-%             t = intTime(tt,false,lddmmoptions);
-% 
-%             rhots = reshape(rhot,cCSP,L);
-%             xt = rhots(1:cdim,:);
-%             at = rhots((cdim+1):end,:);
-% 
-%             function v = Mf(pmi,pml,i,l)
-%                 v = zeros(cdim);
-% 
-%                 if pmi == 1 % position, row
-%                    if pml == 1 % position, col
-%                    else % momentum, col
-%                        sl = pml-1;
-%                        v = Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl))*eye(cdim);
-%                    end
-%                 else % momentum, row
-%                    if pml == 1 % position, col
-%                    else % momentum, col
-%                        sl = pml-1;
-%                        v = -2*D1Ks(xt(:,i),xt(:,l),scales(sl),scaleweight(sl))*(xt(:,i)-xt(:,l)) ...
-%                              *at(:,i)';
-%                    end                
-%                 end
-% 
-%                 v = {v};   
-%             end
-% 
-%             M = reshape(cell2mat(mmap(@Mf,1+R,L,1+R,L)),cdim*(1+R),cdim*(1+R),L,L);
-%             M = reshape(permute(M,[1 3 2 4]),cdim*(1+R)*L,cdim*(1+R)*L);
-% 
-%             drho = M*rhot;
-% 
-%             drho = intResult(drho,false,lddmmoptions);
-% 
-%             % debug
-%             if getOption(lddmmoptions,'testC')
-%                 drho2 = G1(tt,rhot);
-%                 if norm(drho-drho2) > 10e-12
-%                     1;
-%                 end
-%                 assert(norm(drho-drho2) < 10e-12);
-%             end
-%         end        
-    
         function dGt = G1(tt,Gt)  % slooow version
             Gt = reshape(Gt,cCSP,L);
             t = intTime(tt,false,lddmmoptions);
@@ -363,7 +285,7 @@ switch order
     case 1
         evoG = @Gindex;        
     case 2
-        assert(false);
+        evoG = @Gindex;        
 end
 
 end

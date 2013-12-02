@@ -35,8 +35,6 @@ phioffset = 0;
 Dphioffset = phioffset+cdim;
 muoffset = Dphioffset+cdim*cdim;
 mujoffset = muoffset+cdim;
-gradCSP = 2*dim+2*dim^2;
-cgradCSP = 2*cdim+2*cdim^2;
 
 ks = dkernelsGaussian(dim);
 
@@ -113,7 +111,7 @@ ks = dkernelsGaussian(dim);
         end   
         
         function dy = Gtest(tt,ytt)
-            ytt = reshape(ytt,cgradCSP,L);
+            ytt = reshape(ytt,cgraCSP,L);
             t = intTime(t,false,lddmmoptions);
 
             dy = zeros(size(ytt));
@@ -179,11 +177,11 @@ ks = dkernelsGaussian(dim);
                 end
             end
 
-            dy = reshape(dy,cgradCSP*L,1);
+            dy = reshape(dy,cCSP*L,1);
         end        
 
         function dy = G(tt,ytt)
-            ytt = reshape(ytt,cgradCSP,L);
+            ytt = reshape(ytt,cCSP,L);
             t = intTime(tt,true,lddmmoptions);
 
             dy = zeros(size(ytt));
@@ -247,7 +245,7 @@ ks = dkernelsGaussian(dim);
             end
 
             dy = -intResult(dy,true,lddmmoptions); % sign for backwards integration already accounted for
-            dy = reshape(dy,cgradCSP*L,1);
+            dy = reshape(dy,cCSP*L,1);
         end
 
         % function dy = Gforward(t,ytt)
@@ -544,31 +542,32 @@ ks = dkernelsGaussian(dim);
         % integrate
         options = odeset('RelTol',1e-6,'AbsTol',1e-6);
         if cdim == dim
-            w1 = [reshape(v1,CSP,L); zeros(dim^2,L)];
+            w1 = reshape(v1,CSP,L);
         else
             assert(dim == 2 && cdim == 3); % shift from 2d to 3d
             v1 = reshape(v1,CSP,L);
-            w1 = zeros(cgradCSP,L);
+            w1 = zeros(cCSP,L);
             w1(1:dim,:) = v1(1:dim,:);
             w1(cdim+(1:cdim:cdim*dim),:) = v1(dim+(1:dim:dim^2),:);
             w1(cdim+(2:cdim:cdim*dim),:) = v1(dim+(2:dim:dim^2),:);
             w1(cdim+cdim^2+(1:dim),:) = v1(dim+dim^2+(1:dim),:);
-            v1 = reshape(v1,CSP*L,1);
             % rest is zero
         end
         wt = ode45(@Gc,[0 1],w1,options); % solve backwards, fast native
 %         wt = ode45(@G,[0 1],w1,options); % solve backwards, slooow matlab
         assert(wt.x(end) == 1);
-        w0 = reshape(deval(wt,1),cgradCSP,L);
+        w0 = reshape(deval(wt,1),cCSP,L);
         if dim == cdim
-            v0 = [w0(1:dim,:); w0(muoffset+1:end,:)]; % phi, mu, and muj parts
+            v0 = w0;
         else
             assert(dim == 2 && cdim == 3); % shift from 3d to 2d
             v0 = zeros(CSP,L);
             v0(1:dim,:) = w0(1:dim,:);
-            v0(dim+(1:dim),:) = w0(muoffset+(1:dim),:);
-            v0(2*dim+(1:dim:dim*dim),:) = w0(mujoffset+(1:cdim:cdim*dim),:);
-            v0(2*dim+(2:dim:dim*dim),:) = w0(mujoffset+(2:cdim:cdim*dim),:);
+            v0(dim+(1:dim:dim*dim),:) = w0(Dphioffset+(1:cdim:cdim*dim),:);
+            v0(dim+(2:dim:dim*dim),:) = w0(Dphioffset+(2:cdim:cdim*dim),:);            
+            v0(dim+dim^2+(1:dim),:) = w0(muoffset+(1:dim),:);
+            v0(2*dim+dim^2+(1:dim:dim*dim),:) = w0(mujoffset+(1:cdim:cdim*dim),:);
+            v0(2*dim+dim^2+(2:dim:dim*dim),:) = w0(mujoffset+(2:cdim:cdim*dim),:);
         end                 
         v0 = reshape(v0,CSP*L,1);
     end

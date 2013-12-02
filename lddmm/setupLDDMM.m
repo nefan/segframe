@@ -45,21 +45,23 @@ end
 if ~isfield(lddmmoptions,'order')
     lddmmoptions.order = 0;
 end
-assert(lddmmoptions.order >= 0 || lddmmoptions.order <= 1);
+assert(lddmmoptions.order >= 0 || lddmmoptions.order <= 2);
 assert(lddmmoptions.order ==0 || lddmmoptions.R == 1); % scale currently only supported for order 0
-if lddmmoptions.order == 0
-    lddmmoptions.dimX1 = (1+lddmmoptions.R)*lddmmoptions.dim; % x dimension
-else
-    lddmmoptions.dimX1 = (1+lddmmoptions.dim)*lddmmoptions.dim;
-end
 
 % data structures
-if lddmmoptions.order == 0
-    lddmmoptions.CSP = lddmmoptions.dim*(1+lddmmoptions.R); % column size particles
-    lddmmoptions.cCSP = lddmmoptions.cdim*(1+lddmmoptions.R); % for computations
-else
-    lddmmoptions.CSP = lddmmoptions.dim*(1+1+lddmmoptions.dim); % forward column size particles
-    lddmmoptions.cCSP = lddmmoptions.cdim*(1+1+2*lddmmoptions.cdim); % for computations
+switch lddmmoptions.order
+    case 0
+        lddmmoptions.dimq = lddmmoptions.dim;
+        lddmmoptions.CSP = lddmmoptions.dim+lddmmoptions.dim*lddmmoptions.R; % column size particles
+        lddmmoptions.cCSP = lddmmoptions.cdim+lddmmoptions.cdim*lddmmoptions.R; % for computations
+    case 1
+        lddmmoptions.dimq = lddmmoptions.dim+lddmmoptions.dim^2;
+        lddmmoptions.CSP = lddmmoptions.dim*(2+2*lddmmoptions.dim); % forward column size particles
+        lddmmoptions.cCSP = lddmmoptions.cdim*(2+2*lddmmoptions.cdim); % for computations
+    case 2
+        lddmmoptions.dimq = lddmmoptions.dim+lddmmoptions.dim^2+lddmmoptions.dim^3;
+        lddmmoptions.CSP = 2*lddmmoptions.dim+2*lddmmoptions.dim^2+2*lddmmoptions.dim^3; % forward column size particles
+        lddmmoptions.cCSP = 2*lddmmoptions.cdim+2*lddmmoptions.cdim^2+2*lddmmoptions.cdim^3; % for computations
 end
 
 % tolerances
@@ -81,9 +83,9 @@ if getOption(lddmmoptions,'sparsity')
 end
 methods.optimizer = getDefaultOptimizer(optimoptions);
 methods.getInitialData = getPointLDDMMInitialData(moving,lddmmoptions);
-methods.pointPath = getPointPath(moving,lddmmoptions);
+methods.pointPath = getPointPath(lddmmoptions);
 methods.gradTransport = getPointGradTransport(lddmmoptions);
-methods.transport = getPointLDDMMTransport(getPointPath(moving,lddmmoptions),lddmmoptions);
+methods.transport = getPointLDDMMTransport(getPointPath(lddmmoptions),moving,lddmmoptions);
 methods.pathEnergy = getPointPathEnergy(lddmmoptions);
 methods.getMoving = @() moving;
 

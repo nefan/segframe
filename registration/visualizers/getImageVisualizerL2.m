@@ -47,11 +47,11 @@ end
 
         % images
 
-        vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridMoving{2},numel(IF),1) reshape(gridMoving{1},numel(IF),1)]'),order);
+        vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridMoving{2},numel(IF),1) reshape(gridMoving{1},numel(IF),1)]'),imageoptions);
         IMresult = reshape(vals,size(IF));
-        vals = linSampleI(IFG,D1IFG,D2IFG,fixedTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]'),order);
+        vals = linSampleI(IFG,D1IFG,D2IFG,fixedTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]'),imageoptions);
         IFintrp = reshape(vals,size(IF));
-        vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]'),order);
+        vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]'),imageoptions);
         IMintrp = reshape(vals,size(IF));
         
         % display

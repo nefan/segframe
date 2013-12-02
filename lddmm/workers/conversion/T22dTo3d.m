@@ -18,27 +18,19 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-% sample image and derivatives
-function [sI,sD1,sD2] = linSampleI(I,D1I,D2I,ps,imageoptions)
-    order = imageoptions.order;
-    background = imageoptions.background;
-    dim = size(ps,1);
-    L = size(ps,2);
-    
-    sI = interpn(I,ps(1,:),ps(2,:),'linear',background);
+function M3d = T22dTo3d(M2d,lddmmoptions)
+%
+% shift from 2d to 3d representation, M^2xL
+%
 
-    sD1 = zeros(L,dim);
-    for i=1:dim
-        sD1(:,i) = interpn(D1I(:,:,i),ps(1,:),ps(2,:),'linear',0);
-    end
+dim = lddmmoptions.dim;
+cdim = lddmmoptions.cdim; % computations performed in cdim
+L = lddmmoptions.L;
+R = lddmmoptions.R;
+assert(R == 1);
 
-    sD2 = [];    
-    if order >= 1
-        sD2 = zeros(L,dim,dim);
-        for i=1:dim
-            for j=1:dim
-                sD2(:,i,j) = interpn(D2I(:,:,i,j),ps(1,:),ps(2,:),'linear',0);
-            end
-        end        
-    end
-end
+assert(dim == 2 && cdim == 3); % shift from 2d to 3d
+M2d = reshape(M2d,dim,dim,L);
+M3d = zeros(cdim,cdim,L);
+M3d(1:dim,1:dim,:) = M2d;
+M3d = reshape(M3d,cdim^2*L,1);

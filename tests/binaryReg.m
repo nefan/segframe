@@ -15,12 +15,12 @@ clear lddmmoptions
 % lddmmoptions.energyweight = [1 1e4]; % weighting between energy of curve and match
 lddmmoptions.energyweight = [0 10];
 % lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
-lddmmoptions.order = 1;
+lddmmoptions.order = 2;
 
 % optimization options
 optimoptions.tolFun = 1e-5;
 optimoptions.tolX = 1e-5;
-optimoptions.numDiff = false;
+optimoptions.numDiff = true;
 optimoptions.derivativeCheck = false;
 
 % output options
@@ -31,22 +31,21 @@ visoptions.dim = 2;
 
 % data
 % control points
-lddmmoptions.NpointsX = 3;
-lddmmoptions.NpointsY = 3;
+lddmmoptions.NpointsX = 2;
+lddmmoptions.NpointsY = 2;
 IF = zeros(80,80); IF(25:55,25:55) = ones(31,31);
 center = [40.0; 40.0]; % center of image (for rescaling)
 IM = IF;
 % scale and range
-% lddmmoptions.scale = max(size(IF,1)/lddmmoptions.NpointsX,size(IF,2)/lddmmoptions.NpointsY); % Gaussian kernels
 spacingX = size(IF,1)/lddmmoptions.NpointsX;
 spacingY = size(IF,2)/lddmmoptions.NpointsY;
-imageoptions.scale = max(spacingX,spacingY)/2;
-lddmmoptions.scale = imageoptions.scale; % Gaussian kernels
+imageoptions.scale = 2*max(spacingX,spacingY)/2;
+lddmmoptions.scale = 2.0*imageoptions.scale; % Gaussian kernels
 
 options = getDefaultOptions();
 
 % visualize
-visoptions.margin = 40;
+visoptions.margin = 20;
 
 % pretransform moving image
 preScaling = 0.7;
@@ -67,6 +66,7 @@ for i=1:5
     figure(i), colormap(gray)
 end
 
+fprintf('done...\n');
 pause
 % pretransform moving image
 v = 1/8*pi; 
@@ -85,3 +85,4 @@ visualizer(result);
 figure(11), clf
 pointVisualizer(result);
 
+fprintf('done...\n');

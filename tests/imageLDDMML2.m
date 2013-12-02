@@ -22,16 +22,24 @@
 
 % image options
 imageoptions.measure = 'L2';
+imageoptions.background = 255;
 
 % LDDMM options
 clear lddmmoptions
-lddmmoptions.energyweight = [1 2^4]; % weighting between energy of curve and match
+lddmmoptions.energyweight = [0 10]; % weighting between energy of curve and match
 lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
-lddmmoptions.order = 0;
+lddmmoptions.order = 1;
 
 % control points
 lddmmoptions.NpointsX = 2;
 lddmmoptions.NpointsY = 2;
+
+% optimization options
+optimoptions.tolFun = 1e-5;
+optimoptions.tolX = 1e-5;
+optimoptions.numDiff = false;
+optimoptions.derivativeCheck = false;
+optimoptions.method = 'sd';
 
 % output options
 % global globalOptions;
@@ -49,12 +57,9 @@ IF = DD.If;
 spacingX = size(IF,1)/lddmmoptions.NpointsX;
 spacingY = size(IF,2)/lddmmoptions.NpointsY;
 imageoptions.scale = max(spacingX,spacingY)/2;
-lddmmoptions.scale = imageoptions.scale; % Gaussian kernels
+lddmmoptions.scale = 2*imageoptions.scale; % Gaussian kernels
 
 options = getDefaultOptions();
-
-% optimization
-optimoptions.numDiff = true;
 
 [methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions,optimoptions);
 

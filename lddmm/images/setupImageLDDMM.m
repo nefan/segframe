@@ -24,7 +24,8 @@ function [methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoption
 imageoptions.reverse = false; % if true, measure in moving image
 lddmmoptions.reverse = ~imageoptions.reverse;
 imageoptions.scale = getOption(imageoptions,'scale',lddmmoptions.scale);
-imageoptions.range = getOption(imageoptions,'range',3*imageoptions.scale);
+imageoptions.range = ceil(getOption(imageoptions,'range',3*imageoptions.scale));
+imageoptions.background = getOption(imageoptions,'background',0);
 % order: 0: only points information, 1: point and derivative information
 if ~isfield(lddmmoptions,'order')
     lddmmoptions.order = 0;
@@ -57,6 +58,9 @@ imageoptions.moving = moving;
 % lddmm stuff
 [methods lddmmoptions optimoptions] = setupLDDMM(moving,lddmmoptions,varargin{:});
 
+% options from lddmm
+imageoptions.dimq = lddmmoptions.dimq;
+
 % methods
 switch imageoptions.measure
     case 'LOI'
@@ -65,7 +69,7 @@ switch imageoptions.measure
         imageU = getImageUL2(IM,IF,moving,imageoptions,lddmmoptions.dim,lddmmoptions.L);
 end        
         
-methods.F = getPointLDDMMF(imageU,...
+methods.F = getPointLDDMMF(imageU,moving,...
     methods,lddmmoptions);
 
 end
