@@ -37,10 +37,15 @@ if fixedDim
 end
 
 
-    function pointVisualizer(x)
+    function pointVisualizer(x,varargin)
+        tend = 1;
+        if size(varargin,2) > 0
+            tend = varargin{1};
+        end
+
         
         % determine area
-        res = transport(x,moving);
+        res = transport(x,moving,false,tend);
         if ~isempty(fixed)
             minx = min([moving(1,:) fixed(1,:) res(1,:)]);
             maxx = max([moving(1,:) fixed(1,:) res(1,:)]);
@@ -79,7 +84,7 @@ end
         
         printStatus('integrating grid');
         pgrid0 = [reshape(grid0{1},1,[]); reshape(grid0{2},1,[]); reshape(grid0{3},1,[])];
-        pgrid1 = transport(x,pgrid0);
+        pgrid1 = transport(x,pgrid0,false,tend);
         grid1{1} = reshape(pgrid1(1,:),size(grid0{1})); 
         grid1{2} = reshape(pgrid1(2,:),size(grid0{1}));  
         grid1{3} = zeros(size(grid0{1}));

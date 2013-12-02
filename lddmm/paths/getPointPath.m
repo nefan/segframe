@@ -29,8 +29,13 @@ R = lddmmoptions.R;
 CSP = lddmmoptions.CSP;
 cCSP = lddmmoptions.cCSP;
 
-function Gt = lpointPath(x)   
+function Gt = lpointPath(x, varargin)   
+    tend = 1;
+    if size(varargin,2) > 0
+        tend = varargin{1};
+    end
     x = reshape(x,CSP,L);
+    
 
     if dim == cdim
         cx = x;        
@@ -60,8 +65,8 @@ function Gt = lpointPath(x)
     
     options = odeset('RelTol',1e-6,'AbsTol',1e-6);
     [G] = getEvolutionEqs(lddmmoptions);
-    Gt = ode45(G,[0 1],reshape(cx,L*cCSP,1),options); % matrix version
-    assert(Gt.x(end) == 1); % if not, integration failed    
+    Gt = ode45(G,[0 tend],reshape(cx,L*cCSP,1),options); % matrix version
+    assert(Gt.x(end) == tend); % if not, integration failed    
 end
 
 pointPath = @lpointPath;

@@ -36,24 +36,28 @@ backwards = false;
 if size(varargin,2) > 0
     backwards = varargin{1};
 end
-% for movies
-selectscale = -1;
+tend = 1;
 if size(varargin,2) > 1
-    selectscale = varargin{2};
+    tend = varargin{2};
 end
+% % for movies
+% selectscale = -1;
+% if size(varargin,2) > 1
+%     selectscale = varargin{2};
+% end
 
 function dgrid = Gc(tt,gridt) % wrapper for C version
     t = intTime(tt,backwards,lddmmoptions);  
     rhot = deval(rhott,t);
     
-    if selectscale > 0
-        rhot = reshape(rhot,CSP,L);
-
-        rhots = zeros(size(rhot));
-        rhots(1:dim,:) = rhot(1:dim,:); % points
-        rhots(dim+(selectscale-1)*dim+1:dim+(selectscale-1)*dim+dim,:) = rhot(dim+(selectscale-1)*dim+1:dim+(selectscale-1)*dim+dim,:);
-        rhot = reshape(rhots,CSP*L,1);
-    end
+%     if selectscale > 0
+%         rhot = reshape(rhot,CSP,L);
+% 
+%         rhots = zeros(size(rhot));
+%         rhots(1:dim,:) = rhot(1:dim,:); % points
+%         rhots(dim+(selectscale-1)*dim+1:dim+(selectscale-1)*dim+dim,:) = rhot(dim+(selectscale-1)*dim+1:dim+(selectscale-1)*dim+dim,:);
+%         rhot = reshape(rhots,CSP*L,1);
+%     end
        
     dgrid = fastPointTransportOrder0(t,gridt,rhot,L,R,cdim,scales.^2,scaleweight.^2); 
     dgrid = intResult(dgrid,backwards,lddmmoptions);
@@ -93,8 +97,8 @@ end
 
 siz = size(grid0{1});
 g0 = reshape([reshape(grid0{1},1,Ngrid); reshape(grid0{2},1,Ngrid); reshape(grid0{3},1,Ngrid)],3*Ngrid,1);
-gridt = ode45(@Gc,[0 1],g0);
-g1 = reshape(deval(gridt,1),3,Ngrid);
+gridt = ode45(@Gc,[0 tend],g0);
+g1 = reshape(deval(gridt,tend),3,Ngrid);
 grid1 = cell(1);
 grid1{1} = reshape(g1(1,:),siz);
 grid1{2} = reshape(g1(2,:),siz);

@@ -31,7 +31,11 @@ scaleweight = lddmmoptions.scaleweight;
 
 [Ks D1Ks D2Ks] = gaussianKernels();
 
-    function [E v] = lpathEnergy(x,rhot)
+    function [E v] = lpathEnergy(x,rhot,varargin)
+        tend = 1;
+        if size(varargin,2) > 0
+            tend = varargin{1};
+        end
         
         function vt = gradEt(tt,y)
             t = intTime(tt,true,lddmmoptions);            
@@ -59,13 +63,14 @@ scaleweight = lddmmoptions.scaleweight;
             vt = -intResult(vt,true,lddmmoptions); % sign for backwards integration already accounted for
         end
         
-        function Et = Gc(tt,yt) % wrapper for C version of G
+        function Et = Gc(tt) % wrapper for C version of G
             t = intTime(tt,false,lddmmoptions);
             rhott = deval(rhot,t);         
 
             Et = fastPointPathEnergyOrder0(rhott,L,R,cdim,scales.^2,scaleweight.^2);
 
             % debug
+%             [t Et]
             if getOption(lddmmoptions,'testC')
                 Et2 = G(tt);  
                 assert(norm(Et2-Et) < 10e-12);
@@ -91,14 +96,14 @@ scaleweight = lddmmoptions.scaleweight;
             end
         end
 
-        E = integrate(@Gc,0,1); % fast C version
-        % E = energyweight(1)*integrate(@G,0,1); % sloow matlab version
+        E = integrate(@Gc,0,tend); % fast C version
+        % E = energyweight(1)*integrate(@G,0,tend); % sloow matlab version
         assert(E >= 0);
         
         if nargout > 1
             v1 = zeros(CSP*L,1);
             options = odeset('RelTol',1e-6,'AbsTol',1e-6);
-            vt = ode45(@gradEt,[0 1],v1,options);        
+            vt = ode45(@gradEt,[0 tend],v1,options);        
             v = deval(vt,0);
         end
     end
