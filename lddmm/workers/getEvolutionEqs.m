@@ -30,7 +30,6 @@ scales = lddmmoptions.scales;
 scaleweight = lddmmoptions.scaleweight;
 epsilon = lddmmoptions.epsilon;
 
-% [Ks D1Ks D2Ks] = gaussianKernels(); % depreceated
 ks = dkernelsGaussian(cdim);
 
 assert(order >= 0 && order <= 2); % supported orders
@@ -61,66 +60,62 @@ end
         end
         
         % compute kernel and derivatives
-        switch lddmmoptions.order
+        switch order
             case 0
-                [Ks,D1Ks] = ks.TKs(q0,scales,scaleweight);
+                [Ks,D1Ks] = ks.TKs(q0,q0,scales,scaleweight);
             case 1
-                [Ks,D1Ks,D2Ks,D3Ks] = ks.TKs(q0,scales,scaleweight);
+                [Ks,D1Ks,D2Ks,D3Ks] = ks.TKs(q0,q0,scales,scaleweight);
             case 2
-                [Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = ks.TKs(q0,scales,scaleweight);
+                [Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = ks.TKs(q0,q0,scales,scaleweight);
         end        
 
         % chi 
-        e1 = tprodcntr(mu0,2,D1Ks,2);
-        if lddmmoptions.order >= 1 
-            e1 = tsum(e1,tcntr(tprodcntr(mu1,2,D2Ks,4),2,4));
-            e2 = tsum(tprodcntr(mu0,2,D2Ks,2),tcntr(tprodcntr(mu1,2,D3Ks,5),2,4));
+        e1 = tprodcntr(tind(mu0,'aj'),D1Ks,'j');
+        if order >= 1 
+            e1 = tsum(e1,tcntr(tprodcntr(tind(mu1,'agj'),D2Ks,'g'),'j'));
+            e2 = tsum(tprodcntr(tind(mu0,'aj'),D2Ks,'j'),tcntr(tprodcntr(tind(mu1,'adj'),D3Ks,'d'),'j'));
         end        
-        if lddmmoptions.order >= 2
-            e1 = tsum(e1,tcntr(tcntr(tprodcntr(mu2,3,D3Ks,5),2,7),2,4));
-            e2 = tsum(e2,tcntr(tcntr(tprodcntr(mu2,3,D4Ks,6),2,8),2,4));            
-            e3 = tsum(tsum(tprodcntr(mu0,2,D3Ks,2),tcntr(tprodcntr(mu1,2,D4Ks,6),2,4)),...
-                      tcntr(tcntr(tprodcntr(mu2,3,D5Ks,7),2,9),2,4));
+        if order >= 2
+            e1 = tsum(e1,tcntr(tcntr(tprodcntr(tind(mu2,'agdj'),D3Ks,'d'),'g'),'j'));
+            e2 = tsum(e2,tcntr(tcntr(tprodcntr(tind(mu2,'adej'),D4Ks,'e'),'d'),'j'));            
+            e3 = tsum(tsum(tprodcntr(tind(mu0,'aj'),D3Ks,'j'),tcntr(tprodcntr(tind(mu1,'aej'),D4Ks,'e'),'j')),...
+                      tcntr(tcntr(tprodcntr(tind(mu2,'aepj'),D5Ks,'p'),'e'),'j'));
+                  e2.T = 0*e2.T;
+%                   e3.T = 0*e3.T;
         end                
         
         % mu
-        mu0t = tscalar(-1,tshift(tcntr(tproddiag(mu0,2,e1,2),1,3),[2 1]));
-        if lddmmoptions.order >= 1 
-            mu0t = tsum(mu0t,tshift(tcntr(tcntr(tproddiag(mu1,3,e2,2),2,6),1,3),[2 1]));
-            mu0t.indices = 'ai';
+        mu0t = tscalar(-1,tshift(tcntr(tproddiag(tind(mu0,'bi'),tind(e1,'bia'),'i'),'b'),[2 1]));
+        if order >= 1 
+            mu0t = tsum(mu0t,tshift(tcntr(tcntr(tproddiag(tind(mu1,'bgi'),tind(e2,'biga'),'i'),'g'),'b'),[2 1]));
 
-            T = tproddiag(mu1,3,e1,2);
-            mu1t = tsub(tshift(tcntr(T,2,5),[1 3 2]),tshift(tcntr(T,1,4),[3 1 2]));
-            mu1t.indices = 'abi';
+            T = tproddiag(mu1,e1,'i');
+            mu1t = tsub(tshift(tcntr(tind(T,'agibg'),'g'),[1 3 2]),tshift(tcntr(tind(T,'gbiga'),'g'),[3 1 2]));
         end
-        if lddmmoptions.order >= 2             
-            mu0t = tsub(mu0t,tshift(tcntr(tcntr(tcntr(tproddiag(mu2,4,e3,2),3,7),2,5),1,3),[2 1]));
-            mu0t.indices = 'ai';
+        if order >= 2             
+            mu0t = tsub(mu0t,tshift(tcntr(tcntr(tcntr(tproddiag(tind(mu2,'bgdi'),tind(e3,'bigda'),'i'),'d'),'g'),'b'),[2 1]));
             
-            T = tproddiag(mu2,4,e2,2);
-            mu1t = tsub(tsub(tsum(mu1t,tshift(tcntr(tcntr(T,3,7),2,5),[1 3 2])),...
-                             tshift(tcntr(tcntr(T,3,7),1,4),[3 1 2])),...
-                        tshift(tcntr(tcntr(T,2,6),1,4),[3 1 2]));
-            mu1t.indices = 'abi';
+            T = tproddiag(mu2,e2,'i');
+            mu1t = tsub(tsub(tsum(mu1t,tshift(tcntr(tcntr(tind(T,'adgibdg'),'g'),'d'),[1 3 2])),...
+                             tshift(tcntr(tcntr(tind(T,'dbgidag'),'g'),'d'),[3 1 2])),...
+                        tshift(tcntr(tcntr(tind(T,'dgbidga'),'g'),'d'),[3 1 2]));
             
-            T = tproddiag(mu2,4,e1,2);
-            mu2t = tsub(tsum(tshift(tcntr(T,2,6),[1 4 2 3]),...
-                             tshift(tcntr(T,2,6),[1 4 2 3])),... % possible bug !!!!
-                        tshift(tcntr(T,1,5),[4 1 2 3]));
-            mu2t.indices = 'abgi';            
+            T = tproddiag(mu2,e1,'i');
+            mu2t = tshift(tsub(tsum(tcntr(tind(T,'adgibd'),'d'),...
+                                    tcntr(tind(T,'agdibd'),'d')),...
+                               tcntr(tind(T,'dbgida'),'d')),[4 1 2 3]);
         end                
 
         % q
-        q0t = tprodcntr(mu0,2,Ks,2);
-        if lddmmoptions.order >= 1 
-            q0t = tsum(q0t,tcntr(tprodcntr(mu1,3,D1Ks,2),2,4));
-            q1t = tshift(tdiag(tprodcntr(e1,3,q1,1),2,4),[1 3 2]);
+        q0t = tprodcntr(tind(mu0,'aj'),Ks,'j');
+        if order >= 1 
+            q0t = tsum(q0t,tcntr(tprodcntr(tind(mu1,'abj'),D1Ks,'j'),'b'));
+            q1t = tshift(tcntr(tproddiag(tind(e1,'aig'),tind(q1,'gbi'),'i'),'g'),[1 3 2]);
         end                
-        if lddmmoptions.order >= 2
-            q0t = tsum(q0t,tcntr(tcntr(tprodcntr(mu2,4,D2Ks,2),3,6),2,4));
-            q2t = tshift(tsum(tcntr(tproddiag(tcntr(tproddiag(e2,2,q1,3),3,6),2,q1,3),3,5),...
-                              tcntr(tproddiag(e1,2,q2,4),3,4)),[1 3 4 2]);
-            q2t.indices = 'abgi';
+        if order >= 2
+            q0t = tsum(q0t,tcntr(tcntr(tprodcntr(tind(mu2,'abgj'),D2Ks,'j'),'g'),'b'));
+            q2t = tshift(tsum(tcntr(tproddiag(tcntr(tproddiag(tind(e2,'aide'),tind(q1,'dbi'),'i'),'d'),tind(q1,'egi'),'i'),'e'),...
+                              tcntr(tproddiag(tind(e1,'aid'),tind(q2,'dbgi'),'i'),'d')),[1 3 4 2]);
         end                
         
         switch order
@@ -139,20 +134,21 @@ end
 
 %         % debug
 %         if getOption(lddmmoptions,'testC')
-%             if lddmmoptions.order == 0
+%             if order == 0
 %                 drho2 = G0(tt,xx);
-%             else if lddmmoptions.order == 1
+%             else if order == 1
 %                 drho2 = G1(tt,xx);
-%             else if lddmmoptions.order == 2
+%             else if order == 2
 %                     assert(false);
 %             end
 %             end
 %             end
 % 
-%             xtdebug = reshape(xt,[],L);
-%             xtdebug = reshape(xtdebug(1:(cdim+cdim^2+cdim),:),[],1);
-%             drho2 = reshape(drho2,[],L);
-%             drho2 = reshape(drho2(1:(cdim+cdim^2+cdim),:),[],1);
+%             xtdebug = xt;
+% %             xtdebug = reshape(xt,[],L);
+% %             xtdebug = reshape(xtdebug(1:(cdim+cdim^2+cdim),:),[],1);
+% %             drho2 = reshape(drho2,[],L);
+% %             drho2 = reshape(drho2(1:(cdim+cdim^2+cdim),:),[],1);
 %             
 %             if norm(xtdebug-drho2) > 1e-7
 %                 norm(xtdebug-drho2)
@@ -183,6 +179,8 @@ end
     function drho = G0(tt,rhot)  % slooow version
         rhot = reshape(rhot,cCSP,L);
         t = intTime(tt,false,lddmmoptions);
+
+        [Ks D1Ks D2Ks] = gaussianKernels();
 
         drho = zeros(size(rhot));
 

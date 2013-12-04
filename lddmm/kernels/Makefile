@@ -22,7 +22,7 @@ include ../../common.mk
 
 SOURCES=gaussianTKsC.cpp
 CLJMEX=gaussianTKsC.mexa64
-HEADERS=
+HEADERS=gaussianKernels.hpp
 OBJECTS=$(SOURCES:.cpp=.mexa64)
 
 # libraries

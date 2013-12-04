@@ -80,7 +80,7 @@ fixed = [
 visualizer = getPointVisualizer(methods.transport,moving,[],visoptions);
 % rotation
 figure(4)
-x = 10*[
+x = 5*[
     1 0;
     -1 0;
     ]';

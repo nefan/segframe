@@ -64,7 +64,7 @@ function dgrid = Gc(tt,gridt) % wrapper for C version
     
     % debug
     if getOption(lddmmoptions,'testC')
-        assert(selectscale == -1); % not implemented for G
+%         assert(selectscale == -1); % not implemented for G
         dgrid2 = G(tt,gridt);
         assert(norm(dgrid-dgrid2) < 10e-12);
     end

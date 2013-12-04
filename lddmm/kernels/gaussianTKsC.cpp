@@ -34,12 +34,11 @@ cljmex_start()
     const int sl = 0;
     assert(order == 0);
 
-    // sum the entries in the sparse array R
 #pragma omp parallel for schedule(static) shared(K__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd)
-    for (int j=0; j<L; j++)
-        for (int i=0; i<L; i++) {
-            Vector3<scalar> xi(&q0_a_i.x[q0_a_i.rows*i]);
-            Vector3<scalar> xj(&q0_a_i.x[q0_a_i.rows*j]);
+    for (int j=0; j<Lp; j++)
+        for (int i=0; i<Lq; i++) {
+            Vector3<scalar> xi(&q_a_i.x[q_a_i.rows*i]);
+            Vector3<scalar> xj(&p_a_i.x[p_a_i.rows*j]);
 
             const scalar ks = gs::gamma(xi-xj,scales2.x[sl],scaleweight2.x[sl]);
             K__ij.x[i+K__ij.rows*j] = ks;
@@ -74,9 +73,9 @@ cljmex_start()
 
                                             if (nargout > 5) {
 
-                                                for (int p=0; p<dim; p++) {
-                                                    Vector3<int> de = de; de.set(de[p]+1,p);
-                                                    D5Ks__ijbgdep.x[i+D5Ks__ijbgdep.dimsI[0]*j+D5Ks__ijbgdep.dimsI[1]*b+D5Ks__ijbgdep.dimsI[2]*g+D5Ks__ijbgdep.dimsI[3]*d+D5Ks__ijbgdep.dimsI[4]*e+D5Ks__ijbgdep.dimsI[5]*p] =
+                                                for (int phi=0; phi<dim; phi++) {
+                                                    Vector3<int> de = dd; de.set(de[phi]+1,phi);
+                                                    D5Ks__ijbgdep.x[i+D5Ks__ijbgdep.dimsI[0]*j+D5Ks__ijbgdep.dimsI[1]*b+D5Ks__ijbgdep.dimsI[2]*g+D5Ks__ijbgdep.dimsI[3]*d+D5Ks__ijbgdep.dimsI[4]*e+D5Ks__ijbgdep.dimsI[5]*phi] =
                                                         gs::DaKs(de,xi-xj,sqrt(scales2.x[sl]),ks);
                                                 }
                                             }

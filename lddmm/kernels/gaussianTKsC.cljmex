@@ -6,11 +6,19 @@
     :varargsout 6)
 
 ; define input arguments
-(argument :name 'q0_a_i
+(argument :name 'q_a_i
           :type :real
           :format :matrix
           :rows 'dim
-          :cols 'L
+          :cols 'Lq
+          :nonempty true
+        )
+
+(argument :name 'p_a_i
+          :type :real
+          :format :matrix
+          :rows 'dim
+          :cols 'Lp
           :nonempty true
         )
 
@@ -31,7 +39,12 @@
           :format :single
           )
 
-(argument :name 'L
+(argument :name 'Lq
+          :type :int
+          :format :single
+          )
+
+(argument :name 'Lp
           :type :int
           :format :single
           )
@@ -45,38 +58,38 @@
 (output :name 'K__ij
         :type :real
         :format :matrix
-        :rows 'L
-        :columns 'L
+        :rows 'Lq
+        :columns 'Lp
         )
 
 (output :name 'D1Ks__ijb
         :type :real
         :format :multidimarray
-        :dims '(L L dim)
+        :dims '(Lq Lp dim)
         )
 
 (output :name 'D2Ks__ijbg
         :type :real
         :format :multidimarray
-        :dims '(L L dim dim)
+        :dims '(Lq Lp dim dim)
         )
 
 (output :name 'D3Ks__ijbgd
         :type :real
         :format :multidimarray
-        :dims '(L L dim dim dim)
+        :dims '(Lq Lp dim dim dim)
         )
 
 (output :name 'D4Ks__ijbgde
         :type :real
         :format :multidimarray
-        :dims '(L L dim dim dim dim)
+        :dims '(Lq Lp dim dim dim dim)
         )
 
 (output :name 'D5Ks__ijbgdep
         :type :real
         :format :multidimarray
-        :dims '(L L dim dim dim dim dim)
+        :dims '(Lq Lp dim dim dim dim dim)
         )
 
 ; close cljmex

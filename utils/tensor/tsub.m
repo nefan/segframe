@@ -30,4 +30,6 @@ T = tensor(T1.T-T2.T,T1.dims);
 if isfield(T1,'indices') && isfield(T2,'indices') ...
         && isequal(T1.indices,T2.indices)
     T.indices = T1.indices;
+else
+    assert(false);
 end

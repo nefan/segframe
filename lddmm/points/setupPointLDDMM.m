@@ -41,6 +41,6 @@ if ~isfield(pointoptions,'weights')
 end
 
 % methods
-methods.F = getPointLDDMMF(getPointU(fixed,lddmmoptions.dim,lddmmoptions.L,lddmmoptions.order,pointoptions.weights),methods,lddmmoptions);
+methods.F = getPointLDDMMF(getPointU(fixed,lddmmoptions.dim,lddmmoptions.L,lddmmoptions.order,pointoptions.weights),moving,methods,lddmmoptions);
 
 end

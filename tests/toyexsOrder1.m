@@ -37,7 +37,10 @@ fixed = [
 visualizer = getPointVisualizer(methods.transport,moving,[],visoptions);
 % expansion
 figure(1)
-x = [0 0 reshape(eye(dim),dim^2,1)']';
+% A = zeros(dim); A(1,1) = 1;
+A = eye(dim);
+x = [0 0 reshape(A,dim^2,1)']';
+% x = [0 0 reshape(eye(dim),dim^2,1)']';
 visualizer(x);
 % contraction
 figure(2)

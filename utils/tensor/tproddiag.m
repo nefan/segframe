@@ -17,12 +17,30 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tproddiag(T1,d1,T2,d2)
+function T = tproddiag(T1,T2,d1,varargin)
 %
 % diagonal of tensor product of T1 and T2 over dimensions d1 and d2 with result in d1
 % indicies updated if diagonal indices match
 %
 
+if size(varargin,2) == 0
+    dc = d1;
+    d1 = strfind(T1.indices,dc);
+    assert(length(d1) == 1);
+    d2 = strfind(T2.indices,dc);
+    assert(length(d2) == 1);
+else
+    assert(size(varargin,2) == 1);    
+    if ischar(d1)
+        d1 = strfind(T1.indices,d1);
+        assert(length(d1) == 1);
+    end
+    d2 = varargin{1};
+    if ischar(d2)
+        d2 = strfind(T2.indices,d2);
+        assert(length(d2) == 1);
+    end
+end
 assert(T1.dims(d1)==T2.dims(d2));
 
 s1 = [1:(d1-1) (d1+1):tndims(T1)];

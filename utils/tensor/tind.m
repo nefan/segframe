@@ -17,19 +17,12 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tsum(T1,T2)
+function T = tind(T1,newind)
 %
-% elementwise sum of tensors
-% indices are removed if they do not correspond
+% return same tensor with new indicis
 %
 
-assert(isequal(T1.dims,T2.dims));
+assert(length(T1.dims) == length(newind));
 
-T = tensor(T1.T+T2.T,T1.dims);
-
-if isfield(T1,'indices') && isfield(T2,'indices') ...
-        && isequal(T1.indices,T2.indices)
-    T.indices = T1.indices;
-else
-    assert(false);
-end
+T = T1;
+T.indices = newind;

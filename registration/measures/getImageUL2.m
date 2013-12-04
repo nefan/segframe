@@ -69,20 +69,19 @@ end
         ys0 = tsub(sIFG,sIMG);
         y = h/L*sum(ttov(ys0).^2);
         if order == 1
-            ys1 = tsub(sD1IFG,tcntr(tproddiag(sD1IMG,1,q1,3),2,3));
-            ys1.indices = 'ia';
-            y = y + h^3/(12*L)*sum(ttov(ys1).^2);
+            ys1 = tsub(sD1IFG,tcntr(tproddiag(tind(sD1IMG,'ib'),tind(q1,'bai'),'i'),'b'));
+            y = y + h^3/(12*L)*sum(ttov(ys1).^2); % could also be tcntr(tproddiag(ys1,ys1,'i'),'a')
         end
         if order == 2
             assert(false); % add second order terms
         end
 
         % gradient
-        v0 = tshift(tscalar(-2*h/L,tproddiag(ys0,1,sD1IMG,1)),[2 1]);
+        v0 = tshift(tscalar(-2*h/L,tproddiag(ys0,tind(sD1IMG,'ig'),'i')),[2 1]);
         
         if order == 1
-            v0 = tsum(v0,tshift(tscalar(-2*h/L,tcntr(tproddiag(ys1,1,tcntr(tproddiag(sD2IMG,1,q1,3),2,5),1),2,4)),[2 1]));
-            v1 = tshift(tscalar(-2*h^3/(12*L),tdiag(tproddiag(ys1,1,tdiag(tproddiag(sD1IMG,1,q1,3),2,3),1),2,4)),[3 2 1]);
+            v0 = tsum(v0,tshift(tscalar(-2*h/L,tcntr(tproddiag(ys1,tcntr(tproddiag(tind(sD2IMG,'ibg'),q1,'i'),'b'),'i'),'a')),[2 1]));
+            v1 = tshift(tscalar(-2*h^3/(12*L),tdiag(tproddiag(ys1,tdiag(tproddiag(tind(sD1IMG,'ib'),tind(q1,'bai'),'i'),'b'),'i'),'a')),[3 2 1]);
         end
         if order == 2
             assert(false); % add terms

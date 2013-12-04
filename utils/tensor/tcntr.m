@@ -17,11 +17,28 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tcntr(T1,d1,d2)
+function T = tcntr(T1,d1,varargin)
 %
 % contract tensor T1 over dimensions d1 and d2
 %
 
+if size(varargin,2) == 0
+    d = strfind(T1.indices,d1);
+    assert(length(d) == 2);
+    d1 = d(1);
+    d2 = d(2);
+else
+    assert(size(varargin,2) == 1);    
+    if ischar(d1)
+        d1 = strfind(T1.indices,d1);
+        assert(length(d1) == 1);
+    end
+    d2 = varargin{1};
+    if ischar(d2)
+        d2 = strfind(T1.indices,d2);
+        assert(length(d2) == 1);
+    end
+end
 assert(d1<d2);
 assert(T1.dims(d1) == T1.dims(d2));
 

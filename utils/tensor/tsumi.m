@@ -17,19 +17,19 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tsum(T1,T2)
+function T = tsumi(T1,d1)
 %
-% elementwise sum of tensors
-% indices are removed if they do not correspond
+% sum over index d1
 %
 
-assert(isequal(T1.dims,T2.dims));
+if ischar(d1)
+    d1 = strfind(T1.indices,d1);
+    assert(length(d1) == 1);
+end
 
-T = tensor(T1.T+T2.T,T1.dims);
+s1 = [1:(d1-1) (d1+1):tndims(T1)];
+T = tensor(sum(T1.T,d1),T1.dims(s1));
 
-if isfield(T1,'indices') && isfield(T2,'indices') ...
-        && isequal(T1.indices,T2.indices)
-    T.indices = T1.indices;
-else
-    assert(false);
+if isfield(T1,'indices')
+    T.indices = T1.indices(s1);
 end
