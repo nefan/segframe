@@ -4,6 +4,9 @@ startup.m
 # objects
 *.mexa64
 
+# generated heards
+*.cljmex.hpp
+
 # directories
 docs/
 tests/data

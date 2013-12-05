@@ -26,6 +26,8 @@ HEADERS=common.h
 SOURCES=fastPointPathOrder0.cpp fastPointPathOrder1.cpp fastPointPathEnergyOrder0.cpp fastPointGradTransportOrder0.cpp fastPointTransportOrder0.cpp fastPointGradTransportOrder1.cpp fastPointTransportOrder1.cpp
 OBJECTS=$(SOURCES:.cpp=.mexa64)
 
+INC=$(foreach d, $(INCLUDEPATH), -I'$d')
+
 #-----------------------------------------------------------------------------
 # Make rules:
 #-----------------------------------------------------------------------------
@@ -36,9 +38,9 @@ $(OBJECTS): $(HEADERS)
 fastPointGradTransportOrder1.mexa64: dkernelDerivativeMatrix.hpp gaussianKernels.hpp fastPointGradTransportOrder1.hpp order1.hpp
 
 .c.mexa64:
-	$(MEX) CFLAGS='$$CFLAGS $(CFLAGS)' LDFLAGS='$$LDFLAGS $(LDFLAGS)' -I'../../../$(INCLUDEPATH)' $(@:.mexa64=.c)
+	$(MEX) CFLAGS='$$CFLAGS $(CFLAGS)' LDFLAGS='$$LDFLAGS $(LDFLAGS)' $(INC) $(@:.mexa64=.c)
 .cpp.mexa64:
-	$(MEX) CFLAGS='$$CFLAGS $(CFLAGS)' LDFLAGS='$$LDFLAGS $(LDFLAGS)' -I'../../../$(INCLUDEPATH)' $(@:.mexa64=.cpp)
+	$(MEX) CFLAGS='$$CFLAGS $(CFLAGS)' LDFLAGS='$$LDFLAGS $(LDFLAGS)' $(INC) $(@:.mexa64=.cpp)
 	
 clean:
 	rm -f ${OBJECTS}
