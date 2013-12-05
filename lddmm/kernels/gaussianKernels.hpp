@@ -124,15 +124,15 @@ inline scalar DaKs(Vector3<int> &da, const Vector3<scalar> &xmy, const scalar r,
     const Vector3<scalar> z = sqrt(2)/r*xmy;
 
     scalar res;
-    if (sqrt(dot(xmy,xmy)) > 4*r) // cutoff
-        res = 0;
-    else {
+    //if (sqrt(dot(xmy,xmy)) > 4*r) // cutoff
+    //    res = 0;
+    //else {
         res = pow(-sqrt(2)/r,sum(da))*He(da[0],z[0])*He(da[1],z[1])*He(da[2],z[2])*ks;
         //const scalar s = pow(ks,1/3);
         //const scalar res = pow(-sqrt(2)/r,sum(da))*sHe(da[0],z[0],s)*sHe(da[1],z[1],s)*sHe(da[2],z[2],s);
         //res = pow(-sqrt(2)/r,sum(da))*sHe(da[0],z[0],ks)*sHe(da[1],z[1],1)*sHe(da[2],z[2],1);
         //mexAssert(abs(res-pow(-sqrt(2)/r,sum(da))*He(da[0],z[0])*He(da[1],z[1])*He(da[2],z[2])*ks) < 1e-7);
-    }
+    //}
     return res;
 }
 

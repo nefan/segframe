@@ -35,12 +35,19 @@ cljmex_start()
     assert(order == 0);
 
 #pragma omp parallel for schedule(static) shared(K__ij,D1Ks__ijb,D2Ks__ijbg,D3Ks__ijbgd)
-    for (int j=0; j<Lp; j++)
+    for (int j=0; j<Lp; j++) {
+        Vector3<scalar> xj(&p_a_i.x[p_a_i.rows*j]);
+
         for (int i=0; i<Lq; i++) {
             Vector3<scalar> xi(&q_a_i.x[q_a_i.rows*i]);
-            Vector3<scalar> xj(&p_a_i.x[p_a_i.rows*j]);
+            Vector3<scalar> ximxj = xi-xj;
 
-            const scalar ks = gs::gamma(xi-xj,scales2.x[sl],scaleweight2.x[sl]);
+            const scalar r = sqrt(scales2.x[sl]);
+
+            if (sqrt(dot(ximxj,ximxj)) > 4*r) // cutoff
+                continue;
+
+            const scalar ks = gs::gamma(ximxj,scales2.x[sl],scaleweight2.x[sl]);
             K__ij.x[i+K__ij.rows*j] = ks;
 
             if (nargout > 1) {
@@ -48,35 +55,35 @@ cljmex_start()
                 for (int b=0; b<dim; b++) {
                     Vector3<int> da; da.set(1,b);
                     D1Ks__ijb.x[i+D1Ks__ijb.dimsI[0]*j+D1Ks__ijb.dimsI[1]*b] =
-                        gs::DaKs(da,xi-xj,sqrt(scales2.x[sl]),ks);
+                        gs::DaKs(da,ximxj,r,ks);
 
                     if (nargout > 2) {
 
                         for (int g=0; g<dim; g++) {
                             Vector3<int> db = da; db.set(db[g]+1,g);
                             D2Ks__ijbg.x[i+D2Ks__ijbg.dimsI[0]*j+D2Ks__ijbg.dimsI[1]*b+D2Ks__ijbg.dimsI[2]*g] =
-                                gs::DaKs(db,xi-xj,sqrt(scales2.x[sl]),ks);
+                                gs::DaKs(db,ximxj,r,ks);
 
                             if (nargout > 3) {
 
                                 for (int d=0; d<dim; d++) {
                                     Vector3<int> dc = db; dc.set(dc[d]+1,d);
                                     D3Ks__ijbgd.x[i+D3Ks__ijbgd.dimsI[0]*j+D3Ks__ijbgd.dimsI[1]*b+D3Ks__ijbgd.dimsI[2]*g+D3Ks__ijbgd.dimsI[3]*d] =
-                                        gs::DaKs(dc,xi-xj,sqrt(scales2.x[sl]),ks);
+                                        gs::DaKs(dc,ximxj,r,ks);
 
                                     if (nargout > 4) {
 
                                         for (int e=0; e<dim; e++) {
                                             Vector3<int> dd = dc; dd.set(dd[e]+1,e);
                                             D4Ks__ijbgde.x[i+D4Ks__ijbgde.dimsI[0]*j+D4Ks__ijbgde.dimsI[1]*b+D4Ks__ijbgde.dimsI[2]*g+D4Ks__ijbgde.dimsI[3]*d+D4Ks__ijbgde.dimsI[4]*e] =
-                                                gs::DaKs(dd,xi-xj,sqrt(scales2.x[sl]),ks);
+                                                gs::DaKs(dd,ximxj,r,ks);
 
                                             if (nargout > 5) {
 
                                                 for (int phi=0; phi<dim; phi++) {
                                                     Vector3<int> de = dd; de.set(de[phi]+1,phi);
                                                     D5Ks__ijbgdep.x[i+D5Ks__ijbgdep.dimsI[0]*j+D5Ks__ijbgdep.dimsI[1]*b+D5Ks__ijbgdep.dimsI[2]*g+D5Ks__ijbgdep.dimsI[3]*d+D5Ks__ijbgdep.dimsI[4]*e+D5Ks__ijbgdep.dimsI[5]*phi] =
-                                                        gs::DaKs(de,xi-xj,sqrt(scales2.x[sl]),ks);
+                                                        gs::DaKs(de,ximxj,r,ks);
                                                 }
                                             }
                                         }
@@ -88,5 +95,6 @@ cljmex_start()
                 }
             }
         }
+    }
 
 cljmex_end()

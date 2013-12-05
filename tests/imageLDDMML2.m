@@ -31,8 +31,8 @@ lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energywei
 lddmmoptions.order = 1;
 
 % control points
-lddmmoptions.NpointsX = 2;
-lddmmoptions.NpointsY = 2;
+lddmmoptions.NpointsX = 4;
+lddmmoptions.NpointsY = 4;
 
 % optimization options
 optimoptions.tolFun = 1e-5;
@@ -46,6 +46,7 @@ optimoptions.method = 'sd';
 % globalOptions.verbose = true;
 clear visoptions
 visoptions = [];
+visoptions.showsmooth = true;
 
 % data
 DD = load('tests/data/images1.mat');
@@ -53,9 +54,10 @@ DD = load('tests/data/images1.mat');
 match = [];
 IM = DD.Im;
 IF = DD.If;
+imageoptions.margin = 25;
 % scale
-spacingX = size(IF,1)/lddmmoptions.NpointsX;
-spacingY = size(IF,2)/lddmmoptions.NpointsY;
+spacingX = (size(IF,1)-2*imageoptions.margin)/lddmmoptions.NpointsX;
+spacingY = (size(IF,2)-2*imageoptions.margin)/lddmmoptions.NpointsY;
 imageoptions.scale = max(spacingX,spacingY)/2;
 lddmmoptions.scale = 2*imageoptions.scale; % Gaussian kernels
 

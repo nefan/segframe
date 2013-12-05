@@ -80,8 +80,6 @@ end
             e2 = tsum(e2,tcntr(tcntr(tprodcntr(tind(mu2,'adej'),D4Ks,'e'),'d'),'j'));            
             e3 = tsum(tsum(tprodcntr(tind(mu0,'aj'),D3Ks,'j'),tcntr(tprodcntr(tind(mu1,'aej'),D4Ks,'e'),'j')),...
                       tcntr(tcntr(tprodcntr(tind(mu2,'aepj'),D5Ks,'p'),'e'),'j'));
-                  e2.T = 0*e2.T;
-%                   e3.T = 0*e3.T;
         end                
         
         % mu
@@ -101,9 +99,9 @@ end
                         tshift(tcntr(tcntr(tind(T,'dgbidga'),'g'),'d'),[3 1 2]));
             
             T = tproddiag(mu2,e1,'i');
-            mu2t = tshift(tsub(tsum(tcntr(tind(T,'adgibd'),'d'),...
-                                    tcntr(tind(T,'agdibd'),'d')),...
-                               tcntr(tind(T,'dbgida'),'d')),[4 1 2 3]);
+            mu2t = tsub(tshift(tsum(tcntr(tind(T,'adgibd'),'d'),...
+                                    tcntr(tind(T,'agdibd'),'d')),[1 4 2 3]),...
+                        tshift(tcntr(tind(T,'dbgida'),'d'),[4 1 2 3]));
         end                
 
         % q

@@ -78,7 +78,7 @@ fixed = [
 ]';
 [methods lddmmoptions1] = setupPointLDDMM(moving,fixed,[],lddmmoptions);
 visualizer = getPointVisualizer(methods.transport,moving,[],visoptions);
-% rotation
+% near collision
 figure(4)
 x = 5*[
     1 0;

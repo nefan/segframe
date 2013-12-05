@@ -72,12 +72,14 @@ end
         figure(4), clf, colormap gray, imagesc(IMresult-IFintrp), colorbar
         hold on, plot(imageoptions.moving(1,:),imageoptions.moving(2,:),'ro');
         figure(5), clf, colormap gray, imagesc(abs(IMresult-IMintrp)), colorbar
+        hold on, plot(imageoptions.moving(2,:),imageoptions.moving(1,:),'ro');
+        hold on, plot(moved(1,:),moved(2,:),'bo');
         
         fprintf('Image matching results:\n')
         fprintf('pre-match 1-norm IM/IF: %f\n',norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/numel(IFG(margin:end-margin,margin:end-margin)));
         fprintf('post-match 1-norm IM/IF: %f\n',norm(IMresult(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/numel(IFG(margin:end-margin,margin:end-margin)));
-        fprintf('relative decrase (%%): %f\n',(1-norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2))*100);
-        fprintf('change 1-norm: %f\n',norm(IMresult-IMintrp,2)/numel(IFG));
+        fprintf('relative decrase (%%): %f\n',(1-norm(IMresult(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2))*100);
+        fprintf('change 1-norm: %f\n',norm(IMresult(margin:end-margin,margin:end-margin)-IMintrp(margin:end-margin,margin:end-margin),1)/numel(IFG(margin:end-margin,margin:end-margin)));
         
         stop = false; % dont stop
     end
