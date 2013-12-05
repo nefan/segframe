@@ -13,7 +13,7 @@ imageoptions.measure = 'L2';
 % LDDMM options
 clear lddmmoptions
 % lddmmoptions.energyweight = [1 1e4]; % weighting between energy of curve and match
-lddmmoptions.energyweight = [0 10];
+lddmmoptions.energyweight = [0 1e2];
 % lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
 lddmmoptions.order = 0;
 
@@ -29,27 +29,30 @@ optimoptions.derivativeCheck = false;
 clf
 visoptions.dim = 2;
 
-% data
-% control points
-lddmmoptions.NpointsX = 4;
-lddmmoptions.NpointsY = 4;
-IF = zeros(80,80);
-center = [40.0; 40.0]; % center of image (for rescaling)
-IF(center(1),center(2)) = 255;
-smoothscale = 10;
-Gfilter = fspecial('gaussian',3*smoothscale,smoothscale);
-IF = imfilter(IF,Gfilter,'same'); % smooth
-IM = IF;
-% scale and range
-spacingX = size(IF,1)/lddmmoptions.NpointsX;
-spacingY = size(IF,2)/lddmmoptions.NpointsY;
-imageoptions.scale = 2*max(spacingX,spacingY)/2;
-lddmmoptions.scale = 2.0*imageoptions.scale; % Gaussian kernels
-
 options = getDefaultOptions();
 
 % visualize
 visoptions.margin = 20;
+visoptions.showsmooth = false;
+
+% data
+% control points
+lddmmoptions.NpointsX = 8;
+lddmmoptions.NpointsY = 8;
+
+IF = zeros(80,80);
+center = [40.0; 40.0]; % center of image (for rescaling)
+IF(center(1),center(2)) = 255;
+smoothscale = 10;
+Gfilter = fspecial('gaussian',5*smoothscale,smoothscale);
+IF = imfilter(IF,Gfilter,'same'); % smooth
+IM = IF;
+imageoptions.margin = 20;
+% scale and range
+spacingX = (size(IF,1)-2*imageoptions.margin)/lddmmoptions.NpointsX;
+spacingY = (size(IF,2)-2*imageoptions.margin)/lddmmoptions.NpointsY;
+imageoptions.scale = 2*max(spacingX,spacingY)/2;
+lddmmoptions.scale = 2.0*imageoptions.scale; % Gaussian kernels
 
 % % pretransform moving image
 % preScaling = 0.7;
@@ -72,31 +75,40 @@ visoptions.margin = 20;
 % 
 % fprintf('done...\n');
 % pause
+% 
+% % pretransform moving image
+% imageoptions.movingTransform = @(x) x;
+% 
+% IM = zeros(size(IF));
+% IM(center(1)+10,center(2)) = 255;
+% Gfilter = fspecial('gaussian',3*smoothscale,smoothscale);
+% IM = imfilter(IM,Gfilter,'same'); % smooth
+% 
+% [methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions,optimoptions);
+% visualizer = getImageVisualizerL2(methods.transport,IM,IF,visoptions,imageoptions);
+% methods.iterationVisualizer = visualizer;
+% pointVisualizer = getPointVisualizer(methods.transport,methods.getMoving(),[],visoptions);
+% 
+% result = runRegister(methods, options);
+% reshape(result,[],lddmmoptions.L)
+% 
+% visualizer(result);
+% figure(11), clf
+% pointVisualizer(result);
+% 
+% fprintf('done...\n');
+% 
+% pause
 
-% pretransform moving image
-imageoptions.movingTransform = @(x) x;
-
-IM = zeros(80,80);
-IM(center(1)+10,center(2)) = 255;
+IF = zeros(80,80);
+center = [40.0; 40.0]; % center of image (for rescaling)
+IF(center(1),center(2)) = 255;
 smoothscale = 10;
-Gfilter = fspecial('gaussian',3*smoothscale,smoothscale);
-IM = imfilter(IM,Gfilter,'same'); % smooth
+Gfilter = fspecial('gaussian',5`*smoothscale,smoothscale);
+Gfilter = imresize(Gfilter,[1.5*size(Gfilter,1) size(Gfilter,2)]);
+IF = imfilter(IF,Gfilter,'same'); % smooth
+IM = IF;
 
-[methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions,optimoptions);
-visualizer = getImageVisualizerL2(methods.transport,IM,IF,visoptions,imageoptions);
-methods.iterationVisualizer = visualizer;
-pointVisualizer = getPointVisualizer(methods.transport,methods.getMoving(),[],visoptions);
-
-result = runRegister(methods, options);
-reshape(result,[],lddmmoptions.L)
-
-visualizer(result);
-figure(11), clf
-pointVisualizer(result);
-
-fprintf('done...\n');
-
-pause
 % pretransform moving image
 v = 1/8*pi; 
 Rotv = [cos(v) sin(v); -sin(v) cos(v)];

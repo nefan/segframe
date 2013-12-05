@@ -25,6 +25,7 @@ imageoptions.reverse = false; % if true, measure in moving image
 lddmmoptions.reverse = ~imageoptions.reverse;
 imageoptions.scale = getOption(imageoptions,'scale',lddmmoptions.scale);
 imageoptions.range = ceil(getOption(imageoptions,'range',3*imageoptions.scale));
+imageoptions.margin = ceil(getOption(imageoptions,'margin',0));
 imageoptions.background = getOption(imageoptions,'background',0);
 % order: 0: only points information, 1: point and derivative information
 if ~isfield(lddmmoptions,'order')
@@ -42,10 +43,10 @@ if isfield(lddmmoptions,'controlPoints')
     moving = lddmmoptions.controlPoints;
 else
     assert(imageoptions.dim == 2);
-    spacingX = size(IF,1)/lddmmoptions.NpointsX;
-    spacingY = size(IF,2)/lddmmoptions.NpointsY;
+    spacingX = (size(IF,1)-2*imageoptions.margin)/lddmmoptions.NpointsX;
+    spacingY = (size(IF,2)-2*imageoptions.margin)/lddmmoptions.NpointsY;
 
-    [grid0{1} grid0{2}] = meshgrid(spacingX/2:spacingX:size(IF,1),spacingY/2:spacingY:size(IF,2));
+    [grid0{1} grid0{2}] = meshgrid(spacingX/2+imageoptions.margin:spacingX:size(IF,1)-imageoptions.margin,spacingY/2+imageoptions.margin:spacingY:size(IF,2)-imageoptions.margin);
 
     lddmmoptions.L = lddmmoptions.NpointsX*lddmmoptions.NpointsY;
     moving = [reshape(grid0{1},1,lddmmoptions.L); reshape(grid0{2},1,lddmmoptions.L)];

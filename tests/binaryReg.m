@@ -31,8 +31,8 @@ visoptions.dim = 2;
 
 % data
 % control points
-lddmmoptions.NpointsX = 10;
-lddmmoptions.NpointsY = 10;
+lddmmoptions.NpointsX = 2;
+lddmmoptions.NpointsY = 2;
 IF = zeros(80,80); IF(25:55,25:55) = ones(31,31);
 center = [40.0; 40.0]; % center of image (for rescaling)
 IM = IF;
@@ -45,11 +45,33 @@ lddmmoptions.scale = 2.0*imageoptions.scale; % Gaussian kernels
 options = getDefaultOptions();
 
 % visualize
-visoptions.margin = 20;
+visoptions.margin = 40;
+
+% % pretransform moving image
+% preScaling = 0.7;
+% imageoptions.movingTransform = @(x) preScaling*(x-repmat(center,1,size(x,2)))+repmat(center,1,size(x,2));
+% 
+% [methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions,optimoptions);
+% visualizer = getImageVisualizerL2(methods.transport,IM,IF,visoptions,imageoptions);
+% methods.iterationVisualizer = visualizer;
+% pointVisualizer = getPointVisualizer(methods.transport,methods.getMoving(),[],visoptions);
+% 
+% result = runRegister(methods, options);
+% reshape(result,[],lddmmoptions.L)
+% 
+% visualizer(result);
+% figure(11), clf
+% pointVisualizer(result);
+% for i=1:5
+%     figure(i), colormap(gray)
+% end
+% 
+% fprintf('done...\n');
+% pause
 
 % pretransform moving image
-preScaling = 0.7;
-imageoptions.movingTransform = @(x) preScaling*(x-repmat(center,1,size(x,2)))+repmat(center,1,size(x,2));
+v = [10 0]';
+imageoptions.movingTransform = @(x) x+repmat(v,1,size(x,2));
 
 [methods lddmmoptions imageoptions] = setupImageLDDMM(IM,IF,imageoptions,lddmmoptions,optimoptions);
 visualizer = getImageVisualizerL2(methods.transport,IM,IF,visoptions,imageoptions);
@@ -68,6 +90,7 @@ end
 
 fprintf('done...\n');
 pause
+
 % pretransform moving image
 v = 1/8*pi; 
 Rotv = [cos(v) sin(v); -sin(v) cos(v)];

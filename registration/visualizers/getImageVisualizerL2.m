@@ -20,9 +20,7 @@
 
 function visualizer = getImageVisualizerL2(transport,IM,IF,visoptions,imageoptions)
 
-scale = imageoptions.scale;
-range = imageoptions.range;
-order = imageoptions.order;
+margin = imageoptions.margin;
 movingTransform = @(x) x;
 fixedTransform = @(x) x;
 if isfield(imageoptions,'movingTransform')
@@ -47,29 +45,38 @@ end
 
         % images
 
-        vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridMoving{2},numel(IF),1) reshape(gridMoving{1},numel(IF),1)]'),imageoptions);
-        IMresult = reshape(vals,size(IF));
-        vals = linSampleI(IFG,D1IFG,D2IFG,fixedTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]'),imageoptions);
-        IFintrp = reshape(vals,size(IF));
-        vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridFixed{2},numel(IF),1) reshape(gridFixed{1},numel(IF),1)]'),imageoptions);
-        IMintrp = reshape(vals,size(IF));
+        if getOption(visoptions,'showsmooth',true')
+            vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridMoving{1},numel(IF),1) reshape(gridMoving{2},numel(IF),1)]'),imageoptions);
+            IMresult = reshape(vals,size(IF));
+            vals = linSampleI(IFG,D1IFG,D2IFG,fixedTransform([reshape(gridFixed{1},numel(IF),1) reshape(gridFixed{2},numel(IF),1)]'),imageoptions);
+            IFintrp = reshape(vals,size(IF));
+            vals = linSampleI(IMG,D1IMG,D2IMG,movingTransform([reshape(gridFixed{1},numel(IF),1) reshape(gridFixed{2},numel(IF),1)]'),imageoptions);
+            IMintrp = reshape(vals,size(IF));
+        else
+            vals = linSampleI(IM,D1IMG,D2IMG,movingTransform([reshape(gridMoving{1},numel(IF),1) reshape(gridMoving{2},numel(IF),1)]'),imageoptions);
+            IMresult = reshape(vals,size(IF));
+            vals = linSampleI(IF,D1IFG,D2IFG,fixedTransform([reshape(gridFixed{1},numel(IF),1) reshape(gridFixed{2},numel(IF),1)]'),imageoptions);
+            IFintrp = reshape(vals,size(IF));
+            vals = linSampleI(IM,D1IMG,D2IMG,movingTransform([reshape(gridFixed{1},numel(IF),1) reshape(gridFixed{2},numel(IF),1)]'),imageoptions);
+            IMintrp = reshape(vals,size(IF));            
+        end
         
         % display
         figure(1), clf, colormap gray, imagesc(IMintrp), colorbar
-        hold on, plot(imageoptions.moving(1,:),imageoptions.moving(2,:),'ro');
+        hold on, plot(imageoptions.moving(2,:),imageoptions.moving(1,:),'ro');
         hold on, plot(moved(1,:),moved(2,:),'bo');
         figure(2), clf, colormap gray, imagesc(IFintrp), colorbar        
         hold on, plot(imageoptions.moving(1,:),imageoptions.moving(2,:),'ro');
         figure(3), clf, colormap gray, imagesc(IMresult), colorbar
-        figure(4), clf, colormap gray, imagesc(abs(IMresult-IFintrp)), colorbar
+        hold on, plot(imageoptions.moving(1,:),imageoptions.moving(2,:),'bo');
+        figure(4), clf, colormap gray, imagesc(IMresult-IFintrp), colorbar
         hold on, plot(imageoptions.moving(1,:),imageoptions.moving(2,:),'ro');
         figure(5), clf, colormap gray, imagesc(abs(IMresult-IMintrp)), colorbar
-%         figure(6), clf, imagesc(abs(IMspline-IFspline))        
         
         fprintf('Image matching results:\n')
-        fprintf('pre-match 1-norm IM/IF: %f\n',norm(IMintrp-IFintrp,2)/numel(IFG));
-        fprintf('post-match 1-norm IM/IF: %f\n',norm(IMresult-IFintrp,2)/numel(IFG));
-        fprintf('relative decrase (%%): %f\n',(1-norm(IMintrp-IFintrp,2)/norm(IMintrp-IFintrp,2))*100);
+        fprintf('pre-match 1-norm IM/IF: %f\n',norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/numel(IFG(margin:end-margin,margin:end-margin)));
+        fprintf('post-match 1-norm IM/IF: %f\n',norm(IMresult(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/numel(IFG(margin:end-margin,margin:end-margin)));
+        fprintf('relative decrase (%%): %f\n',(1-norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2)/norm(IMintrp(margin:end-margin,margin:end-margin)-IFintrp(margin:end-margin,margin:end-margin),2))*100);
         fprintf('change 1-norm: %f\n',norm(IMresult-IMintrp,2)/numel(IFG));
         
         stop = false; % dont stop

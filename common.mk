@@ -35,7 +35,7 @@ MATLAB=matlab
 MEX=mex
 
 CFLAGS=-O3 -msse4 # max optimization
-CFLAGS+=-fopenmp # openmp
-LDFLAGS=-lgomp -fopenmp  # openmp
+# CFLAGS+=-fopenmp # openmp
+# LDFLAGS=-lgomp -fopenmp  # openmp
 
 

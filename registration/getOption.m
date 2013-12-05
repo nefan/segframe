@@ -26,7 +26,7 @@ function optionOrEmpty = getOption(options,field,varargin)
         default = varargin{1};
     end
 
-    if isfield(options,field) && getfield(options,field)
+    if isfield(options,field) && ~isempty(getfield(options,field))
         optionOrEmpty = getfield(options,field);
     else if hasDefault
         optionOrEmpty = default;
