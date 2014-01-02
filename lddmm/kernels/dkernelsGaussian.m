@@ -104,8 +104,8 @@ function [D0Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = TKs(q,p,scales,scaleweight)
         da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1; da(d) = da(d)+1; da(e) = da(e)+1;
         v = DaKs(da,q.T(:,i),p.T(:,j),scales(sl),scaleweight(sl));
     end
-    function v = D5Kf(i,j,b,g,d,e,p)
-        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1; da(d) = da(d)+1; da(e) = da(e)+1; da(p) = da(p)+1;
+    function v = D5Kf(i,j,b,g,d,e,phi)
+        da = zeros(cdim,1); da(b) = da(b)+1; da(g) = da(g)+1; da(d) = da(d)+1; da(e) = da(e)+1; da(phi) = da(phi)+1;
         v = DaKs(da,q.T(:,i),p.T(:,j),scales(sl),scaleweight(sl));
     end
     % compute kernel and derivatives

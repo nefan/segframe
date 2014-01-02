@@ -15,7 +15,7 @@ clear lddmmoptions
 % lddmmoptions.energyweight = [1 1e4]; % weighting between energy of curve and match
 lddmmoptions.energyweight = [0 1e2];
 % lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
-lddmmoptions.order = 0;
+lddmmoptions.order = 1;
 
 % optimization options
 optimoptions.tolFun = 1e-5;

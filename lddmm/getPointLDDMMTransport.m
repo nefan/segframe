@@ -119,7 +119,8 @@ ks = dkernelsGaussian(cdim);
         
         switch order
             case 0
-                g1 = shootgrid(g0,Gt,lddmmoptions,backwards,tend);
+%                 g1 = shootgrid(g0,Gt,lddmmoptions,backwards,tend);
+                g1 = lpathtransport(g0,Gt,backwards,tend);
             case 1
 %                 g1 = shootgridDKernels(x,g0,Gt,lddmmoptions,backwards);
                 g1 = lpathtransport(g0,Gt,backwards,tend);
