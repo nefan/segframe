@@ -17,16 +17,18 @@
 %  along with segframe.  If not, see <http://www.gnu.org/licenses/>.
 %  
 
-function T = tcntr(T1,d1,varargin)
+function T = tproddiag(T1,T2,d1,varargin)
 %
-% contract tensor T1 over dimensions d1 and d2
+% trace of tensor product of T1 and T2 over dimensions d1 and d2 with result in d1
+% indicies updated if diagonal indices match
 %
 
 if size(varargin,2) == 0
-    d = strfind(T1.indices,d1);
-    assert(length(d) == 2);
-    d1 = d(1);
-    d2 = d(2);
+    dc = d1;
+    d1 = strfind(T1.indices,dc);
+    assert(length(d1) == 1);
+    d2 = strfind(T2.indices,dc);
+    assert(length(d2) == 1);
 else
     assert(size(varargin,2) == 1);    
     if ischar(d1)
@@ -35,31 +37,29 @@ else
     end
     d2 = varargin{1};
     if ischar(d2)
-        d2 = strfind(T1.indices,d2);
+        d2 = strfind(T2.indices,d2);
         assert(length(d2) == 1);
     end
 end
-assert(d1<d2);
-assert(T1.dims(d1) == T1.dims(d2));
+assert(T1.dims(d1)==T2.dims(d2));
 
-s1 = [1:(d1-1) (d1+1):(d2-1) (d2+1):tndims(T1)];
+s1 = [1:(d1-1) (d1+1):tndims(T1)];
+s2 = [1:(d2-1) (d2+1):tndims(T2)];
+T1s = tshift(T1,[s1 d1]);
+T2s = tshift(T2,[d2 s2]);
 
-T1s = tshift(T1,[s1 d1 d2]);
+T1sT = reshape(T1s.T,[],T1.dims(d1));
+T2sT = reshape(T2s.T,T2.dims(d2),[]);
 
-T1sT = reshape(T1s.T,[],T1.dims(d1),T1.dims(d1));
-
-TsT = zeros(size(T1sT,1),1);
+% do product over diagonal
+TT = zeros(size(T1sT,1),size(T2sT,2));
 for i=1:T1.dims(d1)
-    TsT(:) = TsT(:) + T1sT(:,i,i);
+    TT = TT + T1sT(:,i)*T2sT(i,:);
 end
 
-if ~isempty(s1)
-    T = tensor(TsT,T1.dims(s1));
-    
-    if isfield(T1,'indices')
-        T.indices = T1.indices(s1);
-    end
-else
-    T = TsT; % return scalar
+T = tensor(TT,[T1.dims(s1) T2.dims(s2)]);
+
+if isfield(T1,'indices') && isfield(T2,'indices') && T1.indices(d1) == T2.indices(d2)
+    T.indices = [T1.indices(s1) T2.indices(s2)];
 end
 

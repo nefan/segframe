@@ -52,7 +52,7 @@ function Gt = lpointPath(x, varargin)
                 cx(cdim+(1:cdim^2),:) = reshape(T22dTo3d(x(dim+(1:dim^2),:),lddmmoptions),cdim^2,L); % q1
                 cx(cdim+cdim^2,:) = 1; % add one in last dim
                 cx(cdim+cdim^2+(1:dim),:) = x(dim+dim^2+(1:dim),:); % mu0
-                cx(2*cdim+cdim^2+(1:cdim^2),:) = -reshape(T22dTo3d(x(2*dim+dim^2+(1:dim^2),:),lddmmoptions),cdim^2,L); % mu1 !!!! note the minus
+                cx(2*cdim+cdim^2+(1:cdim^2),:) = reshape(T22dTo3d(x(2*dim+dim^2+(1:dim^2),:),lddmmoptions),cdim^2,L);
             case 2
                 cx(cdim+(1:cdim^2),:) = reshape(T22dTo3d(x(dim+(1:dim^2),:),lddmmoptions),cdim^2,L); % q1
                 cx(cdim+cdim^2,:) = 1; % add one in last dim

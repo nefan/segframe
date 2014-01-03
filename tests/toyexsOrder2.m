@@ -2,7 +2,7 @@
 
 % LDDMM options
 clear lddmmoptions
-lddmmoptions.scale = 0.5; % Gaussian kernels
+lddmmoptions.scale = 1.0; % Gaussian kernels
 lddmmoptions.energyweight = [1 12]; % weighting between energy of curve and match
 lddmmoptions.energyweight = lddmmoptions.energyweight/sum(lddmmoptions.energyweight);
 lddmmoptions.order = 2;
@@ -43,10 +43,34 @@ A2 = zeros(dim,dim,dim);
 % A2(1,2,1) = 1; A2(1,1,2) = 1;
 % A2(1,1,1) = 1;
 A2(1,2,2) = 1;
-A2 = 0.015*A2;
+A2 = 0.2*A2;
 x = [0 0 reshape(A1,dim^2,1)' reshape(A2,dim^3,1)']';
 visualizer(x);
 [res,Gt] = methods.transport(x,moving);
 E = methods.pathEnergy(x,Gt);
-% E
-% Gt.x, diff(Gt.x)
+E
+Gt.x, diff(Gt.x)
+
+% two point examples
+dim = 2;
+moving = [
+    -1.0 0.0;
+    1.0 0.0;
+]';    
+[methods lddmmoptions1] = setupPointLDDMM(moving,[],[],lddmmoptions);
+visualizer = getPointVisualizer(methods.transport,moving,[],visoptions);
+% expansion
+figure(1)
+A1 = zeros(dim,dim);
+% A1 = eye(dim);
+A2 = zeros(dim,dim,dim);
+% A2(1,2,1) = 1; A2(1,1,2) = 1;
+A2(1,1,1) = 1;
+% A2(1,2,2) = 1;
+x = [0 0 reshape(A1,dim^2,1)' reshape(A2,dim^3,1)'; 
+     0 0 reshape(A1,dim^2,1)' reshape(A2,dim^3,1)']';
+visualizer(x);
+[res,Gt] = methods.transport(x,moving);
+E = methods.pathEnergy(x,Gt);
+E
+Gt.x, diff(Gt.x)

@@ -47,12 +47,9 @@ ks = dkernelsGaussian(cdim);
                 case 0
                     mu0 = tensor(Gt((cdim+1):(cdim+cdim),:),[cdim L],'ai');            
                 case 1
-                    q1 = tensor(Gt((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
                     mu0 = tensor(Gt((cdim+cdim^2+1):(2*cdim+cdim^2),:),[cdim L],'ai');
                     mu1 = tensor(Gt((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),[cdim cdim L],'abi');
                 case 2
-                    q1 = tensor(Gt((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
-                    q2 = tensor(Gt((cdim+cdim^2+1):(cdim+cdim^2+cdim^3),:),[cdim cdim cdim L],'abgi');
                     mu0 = tensor(Gt((cdim+cdim^2+cdim^3+1):(2*cdim+cdim^2+cdim^3),:),[cdim L],'ai');
                     mu1 = tensor(Gt((2*cdim+cdim^2+cdim^3+1):(2*cdim+2*cdim^2+cdim^3),:),[cdim cdim L],'abi');
                     mu2 = tensor(Gt((2*cdim+2*cdim^2+cdim^3+1):(2*cdim+2*cdim^2+2*cdim^3),:),[cdim cdim cdim L],'abgi');
@@ -71,7 +68,7 @@ ks = dkernelsGaussian(cdim);
             % gridt (t derivative)
             gridt = tprodcntr(tind(mu0,'aj'),Ks,'j');
             if order >= 1 
-                gridt = tsum(gridt,tcntr(tprodcntr(tind(mu1,'abj'),D1Ks,'j'),'b'));
+                gridt = tsub(gridt,tcntr(tprodcntr(tind(mu1,'abj'),D1Ks,'j'),'b'));
             end                
             if order >= 2
                 gridt = tsum(gridt,tcntr(tcntr(tprodcntr(tind(mu2,'abgj'),D2Ks,'j'),'g'),'b'));

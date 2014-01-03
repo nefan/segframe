@@ -43,18 +43,18 @@ end
         t = intTime(tt,false,lddmmoptions);
         
         x = reshape(xx,cCSP,L);
-        q0 = tensor(x(1:cdim,:),[cdim L],'ai');
+        q0 = tensor(x(1:cdim,:),[cdim L],'ai'); % q in notes
         switch order
             case 0
-                mu0 = tensor(x((cdim+1):(cdim+cdim),:),[cdim L],'ai');            
+                mu0 = tensor(x((cdim+1):(cdim+cdim),:),[cdim L],'ai'); % p in notes
             case 1
                 q1 = tensor(x((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
-                mu0 = tensor(x((cdim+cdim^2+1):(2*cdim+cdim^2),:),[cdim L],'ai');
+                mu0 = tensor(x((cdim+cdim^2+1):(2*cdim+cdim^2),:),[cdim L],'ai');  % p in notes
                 mu1 = tensor(x((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),[cdim cdim L],'abi');
             case 2
                 q1 = tensor(x((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
                 q2 = tensor(x((cdim+cdim^2+1):(cdim+cdim^2+cdim^3),:),[cdim cdim cdim L],'abgi');
-                mu0 = tensor(x((cdim+cdim^2+cdim^3+1):(2*cdim+cdim^2+cdim^3),:),[cdim L],'ai');
+                mu0 = tensor(x((cdim+cdim^2+cdim^3+1):(2*cdim+cdim^2+cdim^3),:),[cdim L],'ai');  % p in notes
                 mu1 = tensor(x((2*cdim+cdim^2+cdim^3+1):(2*cdim+2*cdim^2+cdim^3),:),[cdim cdim L],'abi');
                 mu2 = tensor(x((2*cdim+2*cdim^2+cdim^3+1):(2*cdim+2*cdim^2+2*cdim^3),:),[cdim cdim cdim L],'abgi');
         end
@@ -69,29 +69,40 @@ end
                 [Ks,D1Ks,D2Ks,D3Ks,D4Ks,D5Ks] = ks.TKs(q0,q0,scales,scaleweight);
         end        
 
-        % chi 
+        % xi 
         e1 = tprodcntr(tind(mu0,'aj'),D1Ks,'j');
         if order >= 1 
-            e1 = tsum(e1,tcntr(tprodcntr(tind(mu1,'agj'),D2Ks,'g'),'j'));
-            e2 = tsum(tprodcntr(tind(mu0,'aj'),D2Ks,'j'),tcntr(tprodcntr(tind(mu1,'adj'),D3Ks,'d'),'j'));
+            e1 = tsub(e1,tcntr(tprodcntr(tind(mu1,'agj'),D2Ks,'g'),'j'));
+            e2 = tsub(tprodcntr(tind(mu0,'aj'),D2Ks,'j'),tcntr(tprodcntr(tind(mu1,'aej'),tind(D3Ks,'ijebg'),'e'),'j'));
         end        
         if order >= 2
             e1 = tsum(e1,tcntr(tcntr(tprodcntr(tind(mu2,'agdj'),D3Ks,'d'),'g'),'j'));
-            e2 = tsum(e2,tcntr(tcntr(tprodcntr(tind(mu2,'adej'),D4Ks,'e'),'d'),'j'));            
-            e3 = tsum(tsum(tprodcntr(tind(mu0,'aj'),D3Ks,'j'),tcntr(tprodcntr(tind(mu1,'aej'),D4Ks,'e'),'j')),...
-                      tcntr(tcntr(tprodcntr(tind(mu2,'aepj'),D5Ks,'p'),'e'),'j'));
+            e2 = tsum(e2,tcntr(tcntr(tprodcntr(tind(mu2,'apdj'),tind(D4Ks,'ijbgpd'),'d'),'p'),'j'));            
         end                
         
         % mu
-        mu0t = tscalar(-1,tshift(tcntr(tproddiag(tind(mu0,'bi'),tind(e1,'bia'),'i'),'b'),[2 1]));
-        if order >= 1 
-            mu0t = tsum(mu0t,tshift(tcntr(tcntr(tproddiag(tind(mu1,'bgi'),tind(e2,'biga'),'i'),'g'),'b'),[2 1]));
+        T00 = tscalar(-1,tcntr(tproddiag(tprodtrace(tind(mu0,'bi'),tind(mu0,'bj'),'b'),tind(D1Ks,'ija'),'i'),'j'));
+        mu0t = T00;
+        if order >= 1
+            T01 = tcntr(tcntr(tproddiag(tprodtrace(tind(mu0,'di'),tind(mu1,'dgj'),'d'),tind(D2Ks,'ijga'),'i'),'j'),'g');
+            T01 = tsub(T01,tcntr(tcntr(tproddiag(tprodtrace(tind(mu0,'dj'),tind(mu1,'dgi'),'d'),tind(D2Ks,'ijga'),'i'),'j'),'g'));
+            T11 = tcntr(tcntr(tcntr(tproddiag(tprodtrace(tind(mu1,'edi'),tind(mu1,'egj'),'e'),tind(D3Ks,'ijdga'),'i'),'j'),'g'),'d');
+            
+            mu0t = tsum(tsum(mu0t,T01),T11);
 
             T = tproddiag(mu1,e1,'i');
             mu1t = tsub(tshift(tcntr(tind(T,'agibg'),'g'),[1 3 2]),tshift(tcntr(tind(T,'gbiga'),'g'),[3 1 2]));
         end
         if order >= 2             
-            mu0t = tsub(mu0t,tshift(tcntr(tcntr(tcntr(tproddiag(tind(mu2,'bgdi'),tind(e3,'bigda'),'i'),'d'),'g'),'b'),[2 1]));
+            T02 = tcntr(tcntr(tcntr(tproddiag(tprodtrace(tind(mu0,'ei'),tind(mu2,'egdj'),'e'),tind(D3Ks,'ijgda'),'i'),'j'),'d'),'g');
+            T02 = tscalar(-1,tsub(T02,tcntr(tcntr(tcntr(tproddiag(tprodtrace(tind(mu0,'ej'),tind(mu2,'egdi'),'e'),tind(D3Ks,'ijgda'),'i'),'j'),'d'),'g')));
+
+            T12 = tcntr(tcntr(tcntr(tcntr(tproddiag(tprodtrace(tind(mu1,'pei'),tind(mu2,'pgdj'),'p'),tind(D4Ks,'ijegda'),'i'),'j'),'d'),'g'),'e');
+            T12 = tscalar(-1,tsub(T12,tcntr(tcntr(tcntr(tcntr(tproddiag(tprodtrace(tind(mu1,'pej'),tind(mu2,'pgdi'),'p'),tind(D4Ks,'ijegda'),'i'),'j'),'d'),'g'),'e')));
+            
+            T22 = tcntr(tcntr(tcntr(tcntr(tcntr(tproddiag(tprodtrace(tind(mu2,'zepi'),tind(mu2,'zgdj'),'z'),tind(D5Ks,'ijedgpa'),'i'),'j'),'e'),'d'),'g'),'p');
+            
+            mu0t = tsum(tsum(tsum(mu0t,T02),T12),T22);
             
             T = tproddiag(mu2,e2,'i');
             mu1t = tsub(tsub(tsum(mu1t,tshift(tcntr(tcntr(tind(T,'adgibdg'),'g'),'d'),[1 3 2])),...
@@ -99,21 +110,19 @@ end
                         tshift(tcntr(tcntr(tind(T,'dgbidga'),'g'),'d'),[3 1 2]));
             
             T = tproddiag(mu2,e1,'i');
-            mu2t = tsub(tshift(tsum(tcntr(tind(T,'adgibd'),'d'),...
-                                    tcntr(tind(T,'agdibd'),'d')),[1 4 2 3]),...
+            mu2t = tsub(tsum(tshift(tcntr(tind(T,'adgibd'),'d'),[1 4 2 3]),...
+                             tshift(tcntr(tind(T,'abdigd'),'d'),[1 2 4 3])),...
                         tshift(tcntr(tind(T,'dbgida'),'d'),[4 1 2 3]));
-        end                
+        end
+        mu0t = tshift(mu0t,[2 1]);
 
         % q
         q0t = tprodcntr(tind(mu0,'aj'),Ks,'j');
         if order >= 1 
-            q0t = tsum(q0t,tcntr(tprodcntr(tind(mu1,'abj'),D1Ks,'j'),'b'));
-            q1t = tshift(tcntr(tproddiag(tind(e1,'aig'),tind(q1,'gbi'),'i'),'g'),[1 3 2]);
+            q0t = tsub(q0t,tcntr(tprodcntr(tind(mu1,'agj'),tind(D1Ks,'ijg'),'j'),'g'));
         end                
         if order >= 2
-            q0t = tsum(q0t,tcntr(tcntr(tprodcntr(tind(mu2,'abgj'),D2Ks,'j'),'g'),'b'));
-            q2t = tshift(tsum(tcntr(tproddiag(tcntr(tproddiag(tind(e2,'aide'),tind(q1,'dbi'),'i'),'d'),tind(q1,'egi'),'i'),'e'),...
-                              tcntr(tproddiag(tind(e1,'aid'),tind(q2,'dbgi'),'i'),'d')),[1 3 4 2]);
+            q0t = tsum(q0t,tcntr(tcntr(tprodcntr(tind(mu2,'agdj'),tind(D2Ks,'ijgd'),'j'),'d'),'g'));
         end                
         
         switch order

@@ -101,8 +101,8 @@ x = [
     0 0 reshape([cos(v) sin(v); -sin(v) cos(v)],dim^2,1)'
     ]';
 visualizer(reshape(x,[],1));
-% [res,Gt] = methods.transport(reshape(x,[],1),moving);
-% E = methods.pathEnergy(reshape(x,[],1),Gt)
+[res,Gt] = methods.transport(reshape(x,[],1),moving);
+E = methods.pathEnergy(reshape(x,[],1),Gt)
 
 
 % two point match examples

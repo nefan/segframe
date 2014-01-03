@@ -49,12 +49,9 @@ ks = dkernelsGaussian(cdim);
                 case 0
                     mu0 = tensor(Gt((cdim+1):(cdim+cdim),:),[cdim L],'ai');            
                 case 1
-                    q1 = tensor(Gt((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
                     mu0 = tensor(Gt((cdim+cdim^2+1):(2*cdim+cdim^2),:),[cdim L],'ai');
                     mu1 = tensor(Gt((2*cdim+cdim^2+1):(2*cdim+2*cdim^2),:),[cdim cdim L],'abi');
                 case 2
-                    q1 = tensor(Gt((cdim+1):(cdim+cdim^2),:),[cdim cdim L],'abi');
-                    q2 = tensor(Gt((cdim+cdim^2+1):(cdim+cdim^2+cdim^3),:),[cdim cdim cdim L],'abgi');
                     mu0 = tensor(Gt((cdim+cdim^2+cdim^3+1):(2*cdim+cdim^2+cdim^3),:),[cdim L],'ai');
                     mu1 = tensor(Gt((2*cdim+cdim^2+cdim^3+1):(2*cdim+2*cdim^2+cdim^3),:),[cdim cdim L],'abi');
                     mu2 = tensor(Gt((2*cdim+2*cdim^2+cdim^3+1):(2*cdim+2*cdim^2+2*cdim^3),:),[cdim cdim cdim L],'abgi');
@@ -67,17 +64,19 @@ ks = dkernelsGaussian(cdim);
                 case 1
                     [Ks,D1Ks,D2Ks] = ks.TKs(q0,q0,scales,scaleweight);
                 case 2
-                    [Ks,D1Ks,D2Ks] = ks.TKs(q0,q0,scales,scaleweight);
+                    [Ks,D1Ks,D2Ks,D3Ks,D4Ks] = ks.TKs(q0,q0,scales,scaleweight);
             end        
 
             % q
-            Et = Et + sum(ttov(tcntr(tproddiag(tproddiag(tind(mu0,'aj'),Ks,'j'),mu0,'i'),'a')));
+            Et = Et + 0.5*tcntr(tprodcntr(tprodtrace(tind(mu0,'ai'),tind(mu0,'aj'),'a'),Ks,'j'),'i');
             if order >= 1
-                Et = Et - sum(ttov(tcntr(tproddiag(tcntr(tproddiag(tind(mu1,'abj'),D2Ks,'j'),'b'),mu1,'i'),'a')));
-                Et = Et + 2*sum(ttov(tcntr(tproddiag(tcntr(tproddiag(tind(mu1,'abj'),D1Ks,'j'),'b'),mu0,'i'),'a')));
+                Et = Et - tcntr(tcntr(tprodcntr(tprodtrace(tind(mu0,'ai'),tind(mu1,'agj'),'a'),tind(D1Ks,'ijg'),'j'),'i'),'g');
+                Et = Et - 0.5*tcntr(tcntr(tcntr(tprodcntr(tprodtrace(tind(mu1,'adi'),tind(mu1,'agj'),'a'),tind(D2Ks,'ijdg'),'j'),'i'),'g'),'d');
             end
             if order >= 2
-                assert(false);
+                Et = Et + tcntr(tcntr(tcntr(tprodcntr(tprodtrace(tind(mu0,'ai'),tind(mu2,'agdj'),'a'),tind(D2Ks,'ijdg'),'j'),'i'),'g'),'d');
+                Et = Et + tcntr(tcntr(tcntr(tcntr(tprodcntr(tprodtrace(tind(mu1,'aei'),tind(mu2,'agdj'),'a'),tind(D3Ks,'ijegd'),'j'),'i'),'g'),'d'),'e');
+                Et = Et + tcntr(tcntr(tcntr(tcntr(tcntr(tprodcntr(tprodtrace(tind(mu2,'aepi'),tind(mu2,'agdj'),'a'),tind(D4Ks,'ijgdep'),'j'),'i'),'g'),'d'),'e'),'p');
             end
             Et
 
@@ -91,7 +90,8 @@ ks = dkernelsGaussian(cdim);
 
 switch order
     case 0
-        pathEnergy = getPointPathEnergyOrder0(lddmmoptions);
+%         pathEnergy = getPointPathEnergyOrder0(lddmmoptions);
+        pathEnergy = @lpathEnergy;
     case 1
         pathEnergy = getPointPathEnergyOrder1(lddmmoptions);
 %         pathEnergy = @lpathEnergy;
